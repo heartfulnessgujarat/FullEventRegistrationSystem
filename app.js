@@ -1,4 +1,4 @@
-const API_URL="YOUR_WEBAPP_URL";
+const API_URL="https://heartfulnessgujarat.github.io/FullEventRegistrationSystem/";
 
 const params=
 new URLSearchParams(window.location.search);
