@@ -16,45 +16,11 @@ async function init(){
 
 showLoading();
 
-let cached=
-localStorage.getItem("CFG_"+EVENT_ID);
-
-if(cached){
-
-applyConfig(JSON.parse(cached));
-
-hideLoading();
-
-loadFresh();
-
-return;
-
-}
-
-await loadFresh();
-
-}
-
-async function loadFresh(){
-
 let res=
 await fetch(API_URL+"?event="+EVENT_ID);
 
 let data=
 await res.json();
-
-localStorage.setItem(
-"CFG_"+EVENT_ID,
-JSON.stringify(data)
-);
-
-applyConfig(data);
-
-hideLoading();
-
-}
-
-function applyConfig(data){
 
 RULES=data.rules;
 
@@ -65,6 +31,8 @@ EVENT=data.event;
 buildTitles(data.titles);
 
 buildForm();
+
+hideLoading();
 
 initButtons();
 
@@ -142,11 +110,9 @@ let title=titles.find(t=>t.Property=="Event Title");
 
 let subtitle=titles.find(t=>t.Property=="Event Subtitle");
 
-document.getElementById("eventTitle")
-.innerText=title?title.Value:"";
+document.getElementById("eventTitle").innerText=title?title.Value:"";
 
-document.getElementById("eventSubtitle")
-.innerText=subtitle?subtitle.Value:"";
+document.getElementById("eventSubtitle").innerText=subtitle?subtitle.Value:"";
 
 }
 
@@ -160,60 +126,17 @@ RULES
 .sort((a,b)=>a.Field_Order-b.Field_Order)
 .forEach(field=>{
 
-if(field.Show!="Yes")
-return;
+if(field.Show!="Yes") return;
 
 let label=document.createElement("label");
 
 label.innerText=field.Field_Label;
 
-if(field.Mandatory=="Yes"){
-
-label.innerText+=" *";
-
-}
-
 form.appendChild(label);
 
-let input;
-
-if(field.Field_Type=="Dropdown"){
-
-input=document.createElement("select");
-
-let defaultOpt=document.createElement("option");
-
-defaultOpt.text="Select";
-
-defaultOpt.value="";
-
-input.appendChild(defaultOpt);
-
-OPTIONS
-.filter(o=>o.Field_Name==field.Field_Name)
-.forEach(opt=>{
-
-if(opt.Option_Status!="Active")
-return;
-
-let option=document.createElement("option");
-
-option.value=opt.Option_Value;
-
-option.text=opt.Option_Label;
-
-input.appendChild(option);
-
-});
-
-}
-else{
-
-input=document.createElement("input");
+let input=document.createElement("input");
 
 input.type="text";
-
-}
 
 input.id=field.Field_Name;
 
@@ -227,9 +150,9 @@ input.oninput=function(){
 
 validateForm();
 
-if(field.Field_Name=="Mobile"){
+if(field.Field_Name=="Name"){
 
-fetchParticipant(this.value);
+searchName(this.value);
 
 }
 
@@ -237,64 +160,81 @@ fetchParticipant(this.value);
 
 form.appendChild(input);
 
-if(field.Help_Text){
-
-let help=document.createElement("div");
-
-help.style.fontSize="12px";
-
-help.style.color="gray";
-
-help.innerText=field.Help_Text;
-
-form.appendChild(help);
-
-}
-
 form.appendChild(document.createElement("br"));
 
 });
 
 }
 
-async function fetchParticipant(mobile){
+async function searchName(name){
 
-if(mobile.length<10) return;
+if(name.length<2) return;
 
 let res=await fetch(
 API_URL+
-"?action=participant"+
+"?action=search"+
 "&event="+EVENT_ID+
-"&mobile="+mobile
+"&name="+name
 );
 
 let data=await res.json();
 
-if(data.status=="found"){
-
-setTimeout(()=>{
-
-fillParticipant(data.participant);
-
-},200);
+showNameList(data.participants);
 
 }
 
+function showNameList(list){
+
+let existing=document.getElementById("nameList");
+
+if(existing){
+
+existing.remove();
+
 }
 
-function fillParticipant(p){
+let div=document.createElement("div");
 
-Object.keys(p).forEach(key=>{
+div.id="nameList";
 
-let el=document.getElementById(key);
+list.forEach(p=>{
 
-if(el){
+let item=document.createElement("div");
 
-el.value=p[key];
+item.innerText=p.Name;
+
+item.style.cursor="pointer";
+
+item.onclick=function(){
+
+selectParticipant(p);
+
+};
+
+div.appendChild(item);
+
+});
+
+document.getElementById("Name")
+.after(div);
+
+}
+
+function selectParticipant(p){
+
+RULES.forEach(field=>{
+
+let el=document.getElementById(field.Field_Name);
+
+if(el && p[field.Field_Name]){
+
+el.value=p[field.Field_Name];
 
 }
 
 });
+
+document.getElementById("nameList").remove();
 
 }
 
@@ -310,11 +250,7 @@ let el=document.getElementById(field.Field_Name);
 
 if(!el) return;
 
-if(el.value.trim()==""){
-
-valid=false;
-
-}
+if(el.value=="") valid=false;
 
 });
 
