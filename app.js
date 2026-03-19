@@ -108,15 +108,20 @@ el.disabled=false;
 
 });
 
-document.getElementById("registerBtn").disabled=true;
+document.getElementById("registerBtn")
+.style.display="none";
 
-document.getElementById("editBtn").style.display="none";
+document.getElementById("editBtn")
+.style.display="none";
 
-document.getElementById("updateBtn").style.display="inline";
+document.getElementById("updateBtn")
+.style.display="inline";
 
 validateForm();
 
 }
+
+
 
 function registerInitial(){
 
