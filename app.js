@@ -1,4 +1,4 @@
-const API_URL="https://script.google.com/macros/s/AKfycbwMXVVLzngiMoQr3XDlOKldn-_n0qflFgVxInhvkVQD5K5EKOeStm9v0q3hrSlJDjwT/exec";
+const API_URL="YOUR_WEBAPP_URL";
 
 const params=
 new URLSearchParams(window.location.search);
@@ -16,11 +16,47 @@ async function init(){
 
 showLoading();
 
+let cached=
+localStorage.getItem("CFG_"+EVENT_ID);
+
+if(cached){
+
+let data=JSON.parse(cached);
+
+applyConfig(data);
+
+hideLoading();
+
+loadFresh();
+
+return;
+
+}
+
+await loadFresh();
+
+}
+
+async function loadFresh(){
+
 let res=
 await fetch(API_URL+"?event="+EVENT_ID);
 
 let data=
 await res.json();
+
+localStorage.setItem(
+"CFG_"+EVENT_ID,
+JSON.stringify(data)
+);
+
+applyConfig(data);
+
+hideLoading();
+
+}
+
+function applyConfig(data){
 
 RULES=data.rules;
 
@@ -32,17 +68,12 @@ buildTitles(data.titles);
 
 buildForm();
 
-hideLoading();
-
 }
 
 function showLoading(){
 
 document.getElementById("loading")
 .style.display="block";
-
-document.getElementById("submitBtn")
-.style.display="none";
 
 }
 
