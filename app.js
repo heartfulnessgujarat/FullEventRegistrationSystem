@@ -33,11 +33,13 @@ return;
 
 }
 
-await loadFresh();
+loadFresh();
 
 }
 
 async function loadFresh(){
+
+try{
 
 let res=
 await fetch(API_URL+"?event="+EVENT_ID);
@@ -53,6 +55,12 @@ JSON.stringify(data)
 applyConfig(data);
 
 hideLoading();
+
+}catch(err){
+
+console.log(err);
+
+}
 
 }
 
@@ -73,7 +81,13 @@ buildForm();
 function showLoading(){
 
 document.getElementById("loading")
+.innerText="Preparing registration form...";
+
+document.getElementById("loading")
 .style.display="block";
+
+document.getElementById("submitBtn")
+.style.display="none";
 
 }
 
