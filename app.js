@@ -288,3 +288,47 @@ document
 }
 
 }
+
+async function fetchParticipant(mobile){
+
+if(mobile.length<10)
+return;
+
+let res=
+await fetch(
+API_URL+
+"?action=participant"+
+"&event="+EVENT_ID+
+"&mobile="+mobile
+);
+
+let data=
+await res.json();
+
+if(data.status=="found"){
+
+fillParticipant(data.participant);
+
+}
+
+}
+
+function fillParticipant(p){
+
+RULES.forEach(field=>{
+
+let el=
+document.getElementById(field.Field_Name);
+
+if(!el) return;
+
+if(p[field.Field_Name]){
+
+el.value=
+p[field.Field_Name];
+
+}
+
+});
+
+}
