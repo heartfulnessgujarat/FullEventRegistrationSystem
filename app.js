@@ -72,6 +72,8 @@ initButtons();
 
 function initButtons(){
 
+setTimeout(()=>{
+
 document.getElementById("editBtn")
 .onclick=enableEdit;
 
@@ -81,7 +83,11 @@ document.getElementById("registerBtn")
 document.getElementById("updateBtn")
 .onclick=registerUpdated;
 
+},200);
+
 }
+
+
 
 function enableEdit(){
 
