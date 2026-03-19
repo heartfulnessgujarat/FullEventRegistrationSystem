@@ -10,61 +10,19 @@ let RULES=[];
 let OPTIONS=[];
 let EVENT={};
 
+let EDIT_MODE=false;
+
 init();
 
 async function init(){
 
 showLoading();
 
-let cached=
-localStorage.getItem("CFG_"+EVENT_ID);
-
-if(cached){
-
-let data=JSON.parse(cached);
-
-applyConfig(data);
-
-hideLoading();
-
-loadFresh();
-
-return;
-
-}
-
-loadFresh();
-
-}
-
-async function loadFresh(){
-
-try{
-
 let res=
 await fetch(API_URL+"?event="+EVENT_ID);
 
 let data=
 await res.json();
-
-localStorage.setItem(
-"CFG_"+EVENT_ID,
-JSON.stringify(data)
-);
-
-applyConfig(data);
-
-hideLoading();
-
-}catch(err){
-
-console.log(err);
-
-}
-
-}
-
-function applyConfig(data){
 
 RULES=data.rules;
 
@@ -76,17 +34,81 @@ buildTitles(data.titles);
 
 buildForm();
 
+hideLoading();
+
+initButtons();
+
+}
+
+function initButtons(){
+
+document
+.getElementById("editBtn")
+.onclick=enableEdit;
+
+document
+.getElementById("registerBtn")
+.onclick=registerInitial;
+
+document
+.getElementById("updateBtn")
+.onclick=registerUpdated;
+
+}
+
+function enableEdit(){
+
+EDIT_MODE=true;
+
+RULES.forEach(field=>{
+
+let el=
+document.getElementById(field.Field_Name);
+
+if(!el) return;
+
+if(field.Editable=="Yes"){
+
+el.disabled=false;
+
+}
+
+});
+
+document
+.getElementById("registerBtn")
+.disabled=true;
+
+document
+.getElementById("editBtn")
+.style.display="none";
+
+document
+.getElementById("updateBtn")
+.style.display="inline";
+
+validateForm();
+
+}
+
+function registerInitial(){
+
+alert("Ready for submission (initial)");
+
+}
+
+function registerUpdated(){
+
+alert("Ready for submission (updated)");
+
 }
 
 function showLoading(){
 
 document.getElementById("loading")
-.innerText="Preparing registration form...";
-
-document.getElementById("loading")
 .style.display="block";
 
-document.getElementById("submitBtn")
+document.getElementById("buttonArea")
 .style.display="none";
 
 }
@@ -96,7 +118,7 @@ function hideLoading(){
 document.getElementById("loading")
 .style.display="none";
 
-document.getElementById("submitBtn")
+document.getElementById("buttonArea")
 .style.display="block";
 
 }
@@ -195,6 +217,12 @@ input.type="text";
 input.id=
 field.Field_Name;
 
+if(field.Editable!="Yes"){
+
+input.disabled=true;
+
+}
+
 input.oninput=validateForm;
 
 form.appendChild(input);
@@ -235,8 +263,7 @@ return;
 let el=
 document.getElementById(field.Field_Name);
 
-if(!el)
-return;
+if(!el) return;
 
 if(el.value.trim()==""){
 
@@ -246,7 +273,18 @@ valid=false;
 
 });
 
-document.getElementById("submitBtn")
+if(EDIT_MODE){
+
+document
+.getElementById("updateBtn")
 .disabled=!valid;
+
+}else{
+
+document
+.getElementById("registerBtn")
+.disabled=!valid;
+
+}
 
 }
