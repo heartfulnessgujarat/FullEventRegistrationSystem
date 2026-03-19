@@ -31,7 +31,7 @@ return;
 
 }
 
-loadFresh();
+await loadFresh();
 
 }
 
@@ -72,22 +72,13 @@ initButtons();
 
 function initButtons(){
 
-setTimeout(()=>{
+document.getElementById("editBtn").onclick=enableEdit;
 
-document.getElementById("editBtn")
-.onclick=enableEdit;
+document.getElementById("registerBtn").onclick=registerInitial;
 
-document.getElementById("registerBtn")
-.onclick=registerInitial;
-
-document.getElementById("updateBtn")
-.onclick=registerUpdated;
-
-},200);
+document.getElementById("updateBtn").onclick=registerUpdated;
 
 }
-
-
 
 function enableEdit(){
 
@@ -95,8 +86,7 @@ EDIT_MODE=true;
 
 RULES.forEach(field=>{
 
-let el=
-document.getElementById(field.Field_Name);
+let el=document.getElementById(field.Field_Name);
 
 if(!el) return;
 
@@ -108,20 +98,15 @@ el.disabled=false;
 
 });
 
-document.getElementById("registerBtn")
-.style.display="none";
+document.getElementById("registerBtn").style.display="none";
 
-document.getElementById("editBtn")
-.style.display="none";
+document.getElementById("editBtn").style.display="none";
 
-document.getElementById("updateBtn")
-.style.display="inline";
+document.getElementById("updateBtn").style.display="inline";
 
 validateForm();
 
 }
-
-
 
 function registerInitial(){
 
@@ -153,11 +138,9 @@ document.getElementById("buttonArea").style.display="block";
 
 function buildTitles(titles){
 
-let title=
-titles.find(t=>t.Property=="Event Title");
+let title=titles.find(t=>t.Property=="Event Title");
 
-let subtitle=
-titles.find(t=>t.Property=="Event Subtitle");
+let subtitle=titles.find(t=>t.Property=="Event Subtitle");
 
 document.getElementById("eventTitle")
 .innerText=title?title.Value:"";
@@ -169,8 +152,7 @@ document.getElementById("eventSubtitle")
 
 function buildForm(){
 
-let form=
-document.getElementById("dynamicForm");
+let form=document.getElementById("dynamicForm");
 
 form.innerHTML="";
 
@@ -277,11 +259,9 @@ form.appendChild(document.createElement("br"));
 
 async function fetchParticipant(mobile){
 
-if(mobile.length<10)
-return;
+if(mobile.length<10) return;
 
-let res=
-await fetch(
+let res=await fetch(
 API_URL+
 "?action=participant"+
 "&event="+EVENT_ID+
@@ -292,7 +272,11 @@ let data=await res.json();
 
 if(data.status=="found"){
 
+setTimeout(()=>{
+
 fillParticipant(data.participant);
+
+},200);
 
 }
 
@@ -300,16 +284,13 @@ fillParticipant(data.participant);
 
 function fillParticipant(p){
 
-RULES.forEach(field=>{
+Object.keys(p).forEach(key=>{
 
-let el=
-document.getElementById(field.Field_Name);
+let el=document.getElementById(key);
 
-if(!el) return;
+if(el){
 
-if(p[field.Field_Name]){
-
-el.value=p[field.Field_Name];
+el.value=p[key];
 
 }
 
@@ -323,8 +304,7 @@ let valid=true;
 
 RULES.forEach(field=>{
 
-if(field.Mandatory!="Yes")
-return;
+if(field.Mandatory!="Yes") return;
 
 let el=document.getElementById(field.Field_Name);
 
@@ -340,8 +320,7 @@ valid=false;
 
 if(EDIT_MODE){
 
-document.getElementById("updateBtn")
-.disabled=!valid;
+document.getElementById("updateBtn").disabled=!valid;
 
 }
 
