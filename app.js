@@ -1,10 +1,8 @@
 const API_URL="https://script.google.com/macros/s/AKfycbwMXVVLzngiMoQr3XDlOKldn-_n0qflFgVxInhvkVQD5K5EKOeStm9v0q3hrSlJDjwT/exec";
 
-const params=
-new URLSearchParams(window.location.search);
+const params=new URLSearchParams(window.location.search);
 
-const EVENT_ID=
-params.get("event");
+const EVENT_ID=params.get("event");
 
 let RULES=[];
 let OPTIONS=[];
@@ -42,16 +40,13 @@ initButtons();
 
 function initButtons(){
 
-document
-.getElementById("editBtn")
+document.getElementById("editBtn")
 .onclick=enableEdit;
 
-document
-.getElementById("registerBtn")
+document.getElementById("registerBtn")
 .onclick=registerInitial;
 
-document
-.getElementById("updateBtn")
+document.getElementById("updateBtn")
 .onclick=registerUpdated;
 
 }
@@ -75,16 +70,13 @@ el.disabled=false;
 
 });
 
-document
-.getElementById("registerBtn")
+document.getElementById("registerBtn")
 .disabled=true;
 
-document
-.getElementById("editBtn")
+document.getElementById("editBtn")
 .style.display="none";
 
-document
-.getElementById("updateBtn")
+document.getElementById("updateBtn")
 .style.display="inline";
 
 validateForm();
@@ -93,13 +85,13 @@ validateForm();
 
 function registerInitial(){
 
-alert("Ready for submission (initial)");
+alert("Ready for submission");
 
 }
 
 function registerUpdated(){
 
-alert("Ready for submission (updated)");
+alert("Updated submission ready");
 
 }
 
@@ -156,8 +148,7 @@ return;
 let label=
 document.createElement("label");
 
-label.innerText=
-field.Field_Label;
+label.innerText=field.Field_Label;
 
 if(field.Mandatory=="Yes"){
 
@@ -171,11 +162,9 @@ let input;
 
 if(field.Field_Type=="Dropdown"){
 
-input=
-document.createElement("select");
+input=document.createElement("select");
 
-let defaultOpt=
-document.createElement("option");
+let defaultOpt=document.createElement("option");
 
 defaultOpt.text="Select";
 
@@ -191,14 +180,11 @@ OPTIONS
 if(opt.Option_Status!="Active")
 return;
 
-let option=
-document.createElement("option");
+let option=document.createElement("option");
 
-option.value=
-opt.Option_Value;
+option.value=opt.Option_Value;
 
-option.text=
-opt.Option_Label;
+option.text=opt.Option_Label;
 
 input.appendChild(option);
 
@@ -207,15 +193,13 @@ input.appendChild(option);
 }
 else{
 
-input=
-document.createElement("input");
+input=document.createElement("input");
 
 input.type="text";
 
 }
 
-input.id=
-field.Field_Name;
+input.id=field.Field_Name;
 
 if(field.Editable!="Yes"){
 
@@ -223,21 +207,29 @@ input.disabled=true;
 
 }
 
-input.oninput=validateForm;
+input.oninput=function(){
+
+validateForm();
+
+if(field.Field_Name=="Mobile"){
+
+fetchParticipant(this.value);
+
+}
+
+};
 
 form.appendChild(input);
 
 if(field.Help_Text){
 
-let help=
-document.createElement("div");
+let help=document.createElement("div");
 
 help.style.fontSize="12px";
 
 help.style.color="gray";
 
-help.innerText=
-field.Help_Text;
+help.innerText=field.Help_Text;
 
 form.appendChild(help);
 
@@ -248,44 +240,6 @@ document.createElement("br")
 );
 
 });
-
-}
-
-function validateForm(){
-
-let valid=true;
-
-RULES.forEach(field=>{
-
-if(field.Mandatory!="Yes")
-return;
-
-let el=
-document.getElementById(field.Field_Name);
-
-if(!el) return;
-
-if(el.value.trim()==""){
-
-valid=false;
-
-}
-
-});
-
-if(EDIT_MODE){
-
-document
-.getElementById("updateBtn")
-.disabled=!valid;
-
-}else{
-
-document
-.getElementById("registerBtn")
-.disabled=!valid;
-
-}
 
 }
 
@@ -324,11 +278,41 @@ if(!el) return;
 
 if(p[field.Field_Name]){
 
-el.value=
-p[field.Field_Name];
+el.value=p[field.Field_Name];
 
 }
 
 });
+
+}
+
+function validateForm(){
+
+let valid=true;
+
+RULES.forEach(field=>{
+
+if(field.Mandatory!="Yes")
+return;
+
+let el=
+document.getElementById(field.Field_Name);
+
+if(!el) return;
+
+if(el.value.trim()==""){
+
+valid=false;
+
+}
+
+});
+
+if(EDIT_MODE){
+
+document.getElementById("updateBtn")
+.disabled=!valid;
+
+}
 
 }
