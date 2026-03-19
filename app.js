@@ -16,11 +16,45 @@ async function init(){
 
 showLoading();
 
+let cached=
+localStorage.getItem("CFG_"+EVENT_ID);
+
+if(cached){
+
+applyConfig(JSON.parse(cached));
+
+hideLoading();
+
+loadFresh();
+
+return;
+
+}
+
+loadFresh();
+
+}
+
+async function loadFresh(){
+
 let res=
 await fetch(API_URL+"?event="+EVENT_ID);
 
 let data=
 await res.json();
+
+localStorage.setItem(
+"CFG_"+EVENT_ID,
+JSON.stringify(data)
+);
+
+applyConfig(data);
+
+hideLoading();
+
+}
+
+function applyConfig(data){
 
 RULES=data.rules;
 
@@ -31,8 +65,6 @@ EVENT=data.event;
 buildTitles(data.titles);
 
 buildForm();
-
-hideLoading();
 
 initButtons();
 
@@ -70,14 +102,11 @@ el.disabled=false;
 
 });
 
-document.getElementById("registerBtn")
-.disabled=true;
+document.getElementById("registerBtn").disabled=true;
 
-document.getElementById("editBtn")
-.style.display="none";
+document.getElementById("editBtn").style.display="none";
 
-document.getElementById("updateBtn")
-.style.display="inline";
+document.getElementById("updateBtn").style.display="inline";
 
 validateForm();
 
@@ -97,21 +126,17 @@ alert("Updated submission ready");
 
 function showLoading(){
 
-document.getElementById("loading")
-.style.display="block";
+document.getElementById("loading").style.display="block";
 
-document.getElementById("buttonArea")
-.style.display="none";
+document.getElementById("buttonArea").style.display="none";
 
 }
 
 function hideLoading(){
 
-document.getElementById("loading")
-.style.display="none";
+document.getElementById("loading").style.display="none";
 
-document.getElementById("buttonArea")
-.style.display="block";
+document.getElementById("buttonArea").style.display="block";
 
 }
 
@@ -145,8 +170,7 @@ RULES
 if(field.Show!="Yes")
 return;
 
-let label=
-document.createElement("label");
+let label=document.createElement("label");
 
 label.innerText=field.Field_Label;
 
@@ -174,7 +198,6 @@ input.appendChild(defaultOpt);
 
 OPTIONS
 .filter(o=>o.Field_Name==field.Field_Name)
-.sort((a,b)=>a.Option_Order-b.Option_Order)
 .forEach(opt=>{
 
 if(opt.Option_Status!="Active")
@@ -235,9 +258,7 @@ form.appendChild(help);
 
 }
 
-form.appendChild(
-document.createElement("br")
-);
+form.appendChild(document.createElement("br"));
 
 });
 
@@ -256,8 +277,7 @@ API_URL+
 "&mobile="+mobile
 );
 
-let data=
-await res.json();
+let data=await res.json();
 
 if(data.status=="found"){
 
@@ -295,8 +315,7 @@ RULES.forEach(field=>{
 if(field.Mandatory!="Yes")
 return;
 
-let el=
-document.getElementById(field.Field_Name);
+let el=document.getElementById(field.Field_Name);
 
 if(!el) return;
 
