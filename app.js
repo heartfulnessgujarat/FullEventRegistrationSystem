@@ -32,7 +32,6 @@ localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
 }
 
 PARTICIPANTS=data.participants||[];
-
 CENTRES=data.centres||[];
 
 setTitles(data.titles);
@@ -83,8 +82,6 @@ showButtons();
 function lookup(input,data,key,callback){
 
 let list=document.createElement("div");
-
-/* IMPORTANT FIX */
 
 list.style.position="absolute";
 list.style.background="white";
@@ -209,8 +206,6 @@ r.disabled=false;
 
 r.style.pointerEvents="auto";
 
-r.tabIndex=0;
-
 e.style.display="inline";
 
 u.style.display="none";
@@ -228,8 +223,6 @@ let r=document.getElementById("registerBtn");
 r.disabled=true;
 
 r.style.pointerEvents="none";
-
-r.tabIndex=-1;
 
 r.style.opacity="0.5";
 
@@ -253,35 +246,47 @@ document.getElementById(name).disabled=false;
 
 }
 
+/* FINAL CORRECTED CENTRE LOGIC */
+
 function enableCentre(){
 
-let c=document.getElementById("Centre");
+let old=document.getElementById("Centre");
 
-c.disabled=false;
+/* replace node to clear old state */
 
-let u=document.getElementById("updateBtn");
+let newCentre=old.cloneNode(true);
 
-u.disabled=true;
+old.parentNode.replaceChild(newCentre,old);
 
-lookup(c,CENTRES,"Centre",(x)=>{
+newCentre.disabled=false;
 
-document.getElementById("District").value=x.District;
+let updateBtn=document.getElementById("updateBtn");
 
-document.getElementById("Zone").value=x.Zone;
+updateBtn.disabled=true;
 
-u.disabled=false;
+/* attach SAME lookup engine as Name */
+
+lookup(newCentre,CENTRES,"Centre",(c)=>{
+
+document.getElementById("District").value=c.District;
+
+document.getElementById("Zone").value=c.Zone;
+
+updateBtn.disabled=false;
 
 });
 
-c.oninput=function(){
+/* disable update while typing */
 
-u.disabled=true;
+newCentre.addEventListener("input",function(){
 
-};
+updateBtn.disabled=true;
+
+});
 
 }
 
-async function register(){
+function register(){
 
 document.getElementById("message").innerText=
 "Registration working (next step).";
