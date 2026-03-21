@@ -32,6 +32,7 @@ localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
 }
 
 PARTICIPANTS=data.participants||[];
+
 CENTRES=data.centres||[];
 
 setTitles(data.titles);
@@ -57,6 +58,7 @@ let form=document.getElementById("form");
 form.innerHTML="";
 
 let label=document.createElement("label");
+
 label.innerText="Name";
 
 form.appendChild(label);
@@ -84,8 +86,11 @@ function lookup(input,data,key,callback){
 let list=document.createElement("div");
 
 list.style.position="absolute";
+
 list.style.background="white";
+
 list.style.zIndex="1000";
+
 list.style.display="none";
 
 input.after(list);
@@ -99,6 +104,7 @@ let text=this.value.trim();
 if(!text){
 
 list.style.display="none";
+
 return;
 
 }
@@ -112,6 +118,7 @@ r[key].toLowerCase()
 if(results.length==0){
 
 list.style.display="none";
+
 return;
 
 }
@@ -210,15 +217,7 @@ e.style.display="inline";
 
 u.style.display="none";
 
-/* REGISTER BUTTON */
-
-r.onclick=function(){
-
-registerParticipant();
-
-};
-
-/* EDIT BUTTON */
+r.onclick=registerParticipant;
 
 e.onclick=editMode;
 
@@ -238,11 +237,8 @@ document.getElementById("editBtn").style.display="none";
 
 document.getElementById("updateBtn").style.display="inline";
 
-document.getElementById("updateBtn").onclick=function(){
-
-registerParticipant();
-
-};
+document.getElementById("updateBtn").onclick=
+registerParticipant;
 
 enable("Mobile");
 
@@ -292,8 +288,6 @@ updateBtn.disabled=true;
 
 }
 
-/* REAL REGISTRATION */
-
 async function registerParticipant(){
 
 let res=await fetch(
@@ -317,9 +311,11 @@ let data=await res.json();
 if(data.status=="success"){
 
 document.getElementById("message").innerText=
-"Thank you. Your registration is successful.";
+data.message;
 
-document.getElementById("updateBtn").style.display="none";
+document.getElementById("registerBtn").disabled=true;
+
+document.getElementById("updateBtn").disabled=true;
 
 }
 
