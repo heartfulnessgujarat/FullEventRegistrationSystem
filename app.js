@@ -1,5 +1,3 @@
-alert("NEW VERSION LOADED");
-
 const API="https://script.google.com/macros/s/AKfycbwMXVVLzngiMoQr3XDlOKldn-_n0qflFgVxInhvkVQD5K5EKOeStm9v0q3hrSlJDjwT/exec";
 
 const params=new URLSearchParams(window.location.search);
@@ -79,14 +77,11 @@ input.autocomplete="off";
 
 form.appendChild(input);
 
-attachLookup(
+createLookup(
 
-"Name",
-
+input,
 PARTICIPANTS,
-
 "Name",
-
 function(p){
 
 participant=p;
@@ -101,13 +96,9 @@ prepareButtons();
 
 }
 
-function attachLookup(field,data,key,onSelect){
-
-let input=document.getElementById(field);
+function createLookup(input,data,key,onSelect){
 
 let list=document.createElement("div");
-
-list.id=field+"List";
 
 input.after(list);
 
@@ -128,15 +119,15 @@ r[key].toLowerCase()
 results.slice(0,10)
 .forEach(r=>{
 
-let d=document.createElement("div");
+let item=document.createElement("div");
 
-d.innerText=r[key];
+item.innerText=r[key];
 
-d.style.cursor="pointer";
+item.style.cursor="pointer";
 
-d.style.padding="6px";
+item.style.padding="5px";
 
-d.onclick=function(){
+item.onclick=function(){
 
 input.value=r[key];
 
@@ -146,7 +137,7 @@ onSelect(r);
 
 };
 
-list.appendChild(d);
+list.appendChild(item);
 
 });
 
@@ -206,15 +197,21 @@ let buttons=document.getElementById("buttons");
 
 buttons.style.display="block";
 
-document.getElementById("registerBtn").disabled=false;
+let registerBtn=document.getElementById("registerBtn");
 
-document.getElementById("editBtn").style.display="inline";
+let editBtn=document.getElementById("editBtn");
 
-document.getElementById("updateBtn").style.display="none";
+let updateBtn=document.getElementById("updateBtn");
 
-document.getElementById("registerBtn").onclick=register;
+updateBtn.style.display="none";
 
-document.getElementById("editBtn").onclick=enterEditMode;
+registerBtn.disabled=false;
+
+editBtn.style.display="inline";
+
+registerBtn.onclick=register;
+
+editBtn.onclick=enterEditMode;
 
 }
 
@@ -232,7 +229,7 @@ enableField("Email");
 
 enableField("PINCODE");
 
-enableCentreLookup();
+enableCentre();
 
 }
 
@@ -242,18 +239,20 @@ document.getElementById(name).disabled=false;
 
 }
 
-function enableCentreLookup(){
+function enableCentre(){
 
 let centre=document.getElementById("Centre");
 
 centre.disabled=false;
 
-attachLookup(
+let updateBtn=document.getElementById("updateBtn");
 
-"Centre",
+updateBtn.disabled=false;
 
+createLookup(
+
+centre,
 CENTRES,
-
 "Centre",
 
 function(c){
@@ -262,13 +261,17 @@ document.getElementById("District").value=c.District;
 
 document.getElementById("Zone").value=c.Zone;
 
-document.getElementById("updateBtn").disabled=false;
+updateBtn.disabled=false;
 
 }
 
 );
 
-document.getElementById("updateBtn").disabled=true;
+centre.oninput=function(){
+
+updateBtn.disabled=true;
+
+};
 
 }
 
