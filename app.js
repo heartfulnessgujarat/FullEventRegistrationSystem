@@ -1,48 +1,58 @@
-const API_URL="https://script.google.com/macros/s/AKfycbwMXVVLzngiMoQr3XDlOKldn-_n0qflFgVxInhvkVQD5K5EKOeStm9v0q3hrSlJDjwT/exec";
+const API="https://script.google.com/macros/s/AKfycbwMXVVLzngiMoQr3XDlOKldn-_n0qflFgVxInhvkVQD5K5EKOeStm9v0q3hrSlJDjwT/exec";
 
-const params=new URLSearchParams(window.location.search);
+const params=
+new URLSearchParams(window.location.search);
 
-const EVENT_ID=params.get("event");
+const EVENT=params.get("event");
 
-let PARTICIPANT=null;
-
-let EDIT_MODE=false;
+let participant=null;
 
 init();
 
 async function init(){
 
-showLoading();
-
 let res=
-await fetch(API_URL+"?event="+EVENT_ID);
+await fetch(API+"?event="+EVENT);
 
 let data=
 await res.json();
 
-buildNameField();
+setTitles(data.titles);
 
-hideLoading();
+buildName();
 
 }
 
-function buildNameField(){
+function setTitles(titles){
 
-let form=document.getElementById("dynamicForm");
+let t=titles.find(x=>x.Property=="Event Title");
+
+let s=titles.find(x=>x.Property=="Event Subtitle");
+
+document.getElementById("eventTitle")
+.innerText=t.Value;
+
+document.getElementById("eventSubtitle")
+.innerText=s.Value;
+
+}
+
+function buildName(){
+
+let form=
+document.getElementById("form");
 
 form.innerHTML="";
 
-let label=document.createElement("label");
+let l=document.createElement("label");
 
-label.innerText="Name";
+l.innerText="Name";
 
-form.appendChild(label);
+form.appendChild(l);
 
 let input=document.createElement("input");
 
-input.id="Name";
-
-input.type="text";
+input.id="name";
 
 input.oninput=function(){
 
@@ -54,7 +64,7 @@ form.appendChild(input);
 
 let list=document.createElement("div");
 
-list.id="nameList";
+list.id="list";
 
 form.appendChild(list);
 
@@ -62,186 +72,157 @@ form.appendChild(list);
 
 async function searchName(name){
 
-if(name.length<2) return;
+if(name.length<2)return;
 
-let res=await fetch(
-API_URL+
+let res=
+await fetch(
+API+
 "?action=search"+
-"&event="+EVENT_ID+
+"&event="+EVENT+
 "&name="+name
 );
 
 let data=await res.json();
 
-showNameList(data.participants);
+let list=document.getElementById("list");
 
-}
+list.innerHTML="";
 
-function showNameList(list){
+data.participants.forEach(p=>{
 
-let div=document.getElementById("nameList");
+let d=document.createElement("div");
 
-div.innerHTML="";
+d.innerText=p.Name;
 
-list.forEach(p=>{
+d.onclick=function(){
 
-let item=document.createElement("div");
-
-item.innerText=p.Name;
-
-item.style.cursor="pointer";
-
-item.onclick=function(){
-
-selectParticipant(p);
+select(p);
 
 };
 
-div.appendChild(item);
+list.appendChild(d);
 
 });
 
 }
 
-function selectParticipant(p){
+async function select(p){
 
-PARTICIPANT=p;
+participant=p;
 
-document.getElementById("nameList").innerHTML="";
+document.getElementById("list").innerHTML="";
 
 buildDetails();
+
+checkRegistration();
 
 }
 
 function buildDetails(){
 
-let form=document.getElementById("dynamicForm");
+let form=document.getElementById("form");
 
 form.innerHTML="";
 
-addField("Name",PARTICIPANT.Name,false);
+add("Name",participant.Name,false);
 
-addField("Mobile",PARTICIPANT.Mobile,false);
+add("Mobile",participant.Mobile,false);
 
-addField("Email",PARTICIPANT.Email,false);
+add("Email",participant.Email,false);
 
-addField("Centre",PARTICIPANT.Centre,false);
+add("Centre",participant.Centre,false);
 
-addField("District",PARTICIPANT.District,false);
+add("District",participant.District,false);
 
-addField("Zone",PARTICIPANT.Zone,false);
+add("Zone",participant.Zone,false);
 
-addField("SRCMID",PARTICIPANT.SRCMID,false);
+add("SRCMID",participant.SRCMID,false);
 
-addField("PINCODE",PARTICIPANT.PINCODE,false);
-
-showButtons();
+add("PINCODE",participant.PINCODE,false);
 
 }
 
-function addField(name,value,editable){
+function add(name,val,editable){
 
-let form=document.getElementById("dynamicForm");
+let form=document.getElementById("form");
 
-let label=document.createElement("label");
+let l=document.createElement("label");
 
-label.innerText=name;
+l.innerText=name;
 
-form.appendChild(label);
+form.appendChild(l);
 
-let input=document.createElement("input");
+let i=document.createElement("input");
 
-input.id=name;
+i.value=val;
 
-input.value=value;
+i.id=name;
 
-input.disabled=!editable;
+i.disabled=!editable;
 
-form.appendChild(input);
-
-form.appendChild(document.createElement("br"));
+form.appendChild(i);
 
 }
 
-function showButtons(){
+async function checkRegistration(){
 
-document.getElementById("buttonArea")
+let res=
+await fetch(
+API+
+"?action=checkRegistration"+
+"&event="+EVENT+
+"&name="+participant.Name
+);
+
+let data=
+await res.json();
+
+if(data.status=="exists"){
+
+document.getElementById("message")
+.innerText=
+"You are already registered";
+
+}
+else{
+
+document.getElementById("buttons")
 .style.display="block";
 
-document.getElementById("registerBtn")
-.style.display="inline";
-
-document.getElementById("editBtn")
-.style.display="inline";
-
-}
-
-document.getElementById("editBtn").onclick=function(){
-
-enableEdit();
-
-};
-
-function enableEdit(){
-
-EDIT_MODE=true;
-
-document.getElementById("registerBtn")
-.disabled=true;
-
-document.getElementById("editBtn")
-.style.display="none";
-
-document.getElementById("updateBtn")
-.style.display="inline";
-
-enableField("Mobile");
-
-enableField("Email");
-
-enableField("Centre");
-
-enableField("PINCODE");
-
-}
-
-function enableField(name){
-
-let el=document.getElementById(name);
-
-if(el){
-
-el.disabled=false;
-
 }
 
 }
 
-document.getElementById("registerBtn").onclick=function(){
+document
+.getElementById("registerBtn")
+.onclick=register;
 
-alert("Registration ready");
+async function register(){
 
-};
+let res=
+await fetch(
+API+
+"?action=register"+
+"&event="+EVENT+
+"&name="+participant.Name+
+"&mobile="+participant.Mobile+
+"&email="+participant.Email+
+"&centre="+participant.Centre+
+"&district="+participant.District+
+"&zone="+participant.Zone+
+"&srcm="+participant.SRCMID+
+"&pincode="+participant.PINCODE
+);
 
-document.getElementById("updateBtn").onclick=function(){
+let data=await res.json();
 
-alert("Updated registration ready");
+if(data.status=="success"){
 
-};
-
-function showLoading(){
-
-document.getElementById("loading")
-.style.display="block";
-
-document.getElementById("buttonArea")
-.style.display="none";
+document.getElementById("message")
+.innerText=
+"Registered. ID: "+
+data.registrationId;
 
 }
-
-function hideLoading(){
-
-document.getElementById("loading")
-.style.display="none";
 
 }
