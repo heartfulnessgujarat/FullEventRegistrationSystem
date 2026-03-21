@@ -5,7 +5,6 @@ const params=new URLSearchParams(window.location.search);
 const EVENT=params.get("event");
 
 let PARTICIPANTS=[];
-let REGISTRATIONS=[];
 let CENTRES=[];
 let participant=null;
 
@@ -13,12 +12,27 @@ init();
 
 async function init(){
 
+let cached=localStorage.getItem("CFG_"+EVENT);
+
+let data;
+
+if(cached){
+
+data=JSON.parse(cached);
+
+}
+else{
+
 let res=await fetch(API+"?event="+EVENT);
 
-let data=await res.json();
+data=await res.json();
+
+localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
+
+}
 
 PARTICIPANTS=data.participants||[];
-REGISTRATIONS=data.registrations||[];
+
 CENTRES=data.centres||[];
 
 setTitles(data.titles);
@@ -54,7 +68,7 @@ input.id="Name";
 
 form.appendChild(input);
 
-attachLookup(input,PARTICIPANTS,"Name",(p)=>{
+lookup(input,PARTICIPANTS,"Name",(p)=>{
 
 participant=p;
 
@@ -66,17 +80,16 @@ showButtons();
 
 }
 
-function attachLookup(input,data,key,callback){
+function lookup(input,data,key,callback){
 
 let list=document.createElement("div");
 
-/* HIDDEN BY DEFAULT */
+/* IMPORTANT FIX */
 
-list.style.display="none";
-
+list.style.position="absolute";
 list.style.background="white";
-
-list.style.position="relative";
+list.style.zIndex="1000";
+list.style.display="none";
 
 input.after(list);
 
@@ -95,9 +108,7 @@ return;
 
 let results=data.filter(r=>
 r[key] &&
-r[key].toString()
-.trim()
-.toLowerCase()
+r[key].toLowerCase()
 .startsWith(text.toLowerCase())
 );
 
@@ -108,8 +119,6 @@ return;
 
 }
 
-/* SHOW ONLY WHEN RESULTS EXIST */
-
 list.style.display="block";
 
 results.slice(0,10).forEach(r=>{
@@ -118,29 +127,14 @@ let item=document.createElement("div");
 
 item.innerText=r[key];
 
+item.style.padding="5px";
+
 item.style.cursor="pointer";
-
-item.style.padding="6px";
-
-item.style.border="1px solid #eee";
-
-item.onmouseover=function(){
-
-this.style.background="#f5f5f5";
-
-};
-
-item.onmouseout=function(){
-
-this.style.background="white";
-
-};
 
 item.onclick=function(){
 
 input.value=r[key];
 
-list.innerHTML="";
 list.style.display="none";
 
 callback(r);
@@ -161,163 +155,135 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-createField("Name",participant.Name,false);
+field("Name",participant.Name,false);
 
-createField("Mobile",participant.Mobile,false);
+field("Mobile",participant.Mobile,false);
 
-createField("Email",participant.Email,false);
+field("Email",participant.Email,false);
 
-createField("Centre",participant.Centre,false);
+field("Centre",participant.Centre,false);
 
-createField("District",participant.District,false);
+field("District",participant.District,false);
 
-createField("Zone",participant.Zone,false);
+field("Zone",participant.Zone,false);
 
-createField("SRCMID",participant.SRCMID,false);
+field("SRCMID",participant.SRCMID,false);
 
-createField("PINCODE",participant.PINCODE,false);
+field("PINCODE",participant.PINCODE,false);
 
 }
 
-function createField(name,value,editable){
+function field(name,value,editable){
 
 let form=document.getElementById("form");
 
-let label=document.createElement("label");
+let l=document.createElement("label");
 
-label.innerText=name;
+l.innerText=name;
 
-form.appendChild(label);
+form.appendChild(l);
 
-let input=document.createElement("input");
+let i=document.createElement("input");
 
-input.id=name;
+i.id=name;
 
-input.value=value||"";
+i.value=value||"";
 
-input.disabled=!editable;
+i.disabled=!editable;
 
-form.appendChild(input);
+form.appendChild(i);
 
 }
 
 function showButtons(){
 
-let buttons=document.getElementById("buttons");
+let r=document.getElementById("registerBtn");
 
-buttons.style.display="block";
+let e=document.getElementById("editBtn");
 
-let registerBtn=document.getElementById("registerBtn");
+let u=document.getElementById("updateBtn");
 
-let editBtn=document.getElementById("editBtn");
+document.getElementById("buttons").style.display="block";
 
-let updateBtn=document.getElementById("updateBtn");
+r.disabled=false;
 
-registerBtn.disabled=false;
+r.style.pointerEvents="auto";
 
-registerBtn.style.opacity="1";
+r.tabIndex=0;
 
-registerBtn.style.pointerEvents="auto";
+e.style.display="inline";
 
-editBtn.style.display="inline";
+u.style.display="none";
 
-updateBtn.style.display="none";
+r.onclick=register;
 
-registerBtn.onclick=register;
-
-editBtn.onclick=enableEdit;
+e.onclick=editMode;
 
 }
 
-function enableEdit(){
+function editMode(){
 
-let registerBtn=document.getElementById("registerBtn");
+let r=document.getElementById("registerBtn");
 
-registerBtn.disabled=true;
+r.disabled=true;
 
-/* HARD DISABLE */
+r.style.pointerEvents="none";
 
-registerBtn.style.pointerEvents="none";
+r.tabIndex=-1;
 
-registerBtn.style.opacity="0.5";
-
-registerBtn.onclick=null;
+r.style.opacity="0.5";
 
 document.getElementById("editBtn").style.display="none";
 
 document.getElementById("updateBtn").style.display="inline";
 
-enableField("Mobile");
+enable("Mobile");
 
-enableField("Email");
+enable("Email");
 
-enableField("PINCODE");
+enable("PINCODE");
 
-enableCentreLookup();
+enableCentre();
 
 }
 
-function enableField(name){
+function enable(name){
 
 document.getElementById(name).disabled=false;
 
 }
 
-function enableCentreLookup(){
+function enableCentre(){
 
-let old=document.getElementById("Centre");
+let c=document.getElementById("Centre");
 
-let newCentre=old.cloneNode(true);
+c.disabled=false;
 
-old.parentNode.replaceChild(newCentre,old);
+let u=document.getElementById("updateBtn");
 
-newCentre.disabled=false;
+u.disabled=true;
 
-let updateBtn=document.getElementById("updateBtn");
+lookup(c,CENTRES,"Centre",(x)=>{
 
-updateBtn.disabled=true;
+document.getElementById("District").value=x.District;
 
-attachLookup(newCentre,CENTRES,"Centre",(c)=>{
+document.getElementById("Zone").value=x.Zone;
 
-document.getElementById("District").value=c.District;
-
-document.getElementById("Zone").value=c.Zone;
-
-updateBtn.disabled=false;
+u.disabled=false;
 
 });
 
-newCentre.addEventListener("input",()=>{
+c.oninput=function(){
 
-updateBtn.disabled=true;
+u.disabled=true;
 
-});
+};
 
 }
 
 async function register(){
 
-let res=await fetch(
-API+
-"?action=register"+
-"&event="+EVENT+
-"&name="+participant.Name+
-"&mobile="+participant.Mobile+
-"&email="+participant.Email+
-"&centre="+participant.Centre+
-"&district="+participant.District+
-"&zone="+participant.Zone+
-"&srcm="+participant.SRCMID+
-"&pincode="+participant.PINCODE
-);
-
-let data=await res.json();
-
-if(data.status=="success"){
-
-document.getElementById("message")
-.innerText="Registration successful";
-
-}
+document.getElementById("message").innerText=
+"Registration working (next step).";
 
 }
