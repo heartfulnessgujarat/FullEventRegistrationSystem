@@ -5,6 +5,7 @@ const params=new URLSearchParams(window.location.search);
 const EVENT=params.get("event");
 
 let PARTICIPANTS=[];
+let REGISTRATIONS=[];
 let participant=null;
 
 init();
@@ -37,6 +38,8 @@ JSON.stringify(data)
 
 PARTICIPANTS=data.participants || [];
 
+REGISTRATIONS=data.registrations || [];
+
 setTitles(data.titles);
 
 buildName();
@@ -49,19 +52,9 @@ let t=titles.find(x=>x.Property=="Event Title");
 
 let s=titles.find(x=>x.Property=="Event Subtitle");
 
-if(t){
+document.getElementById("eventTitle").innerText=t.Value;
 
-document.getElementById("eventTitle")
-.innerText=t.Value;
-
-}
-
-if(s){
-
-document.getElementById("eventSubtitle")
-.innerText=s.Value;
-
-}
+document.getElementById("eventSubtitle").innerText=s.Value;
 
 }
 
@@ -78,8 +71,6 @@ l.innerText="Name";
 form.appendChild(l);
 
 let input=document.createElement("input");
-
-input.id="name";
 
 input.autocomplete="off";
 
@@ -125,8 +116,6 @@ d.style.cursor="pointer";
 
 d.style.padding="6px";
 
-d.style.borderBottom="1px solid #eee";
-
 d.onclick=function(){
 
 selectParticipant(p);
@@ -147,7 +136,7 @@ document.getElementById("list").innerHTML="";
 
 buildDetails();
 
-checkRegistration();
+showButtonsInstant();
 
 }
 
@@ -157,25 +146,25 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-addField("Name",participant.Name);
+add("Name",participant.Name);
 
-addField("Mobile",participant.Mobile);
+add("Mobile",participant.Mobile);
 
-addField("Email",participant.Email);
+add("Email",participant.Email);
 
-addField("Centre",participant.Centre);
+add("Centre",participant.Centre);
 
-addField("District",participant.District);
+add("District",participant.District);
 
-addField("Zone",participant.Zone);
+add("Zone",participant.Zone);
 
-addField("SRCMID",participant.SRCMID);
+add("SRCMID",participant.SRCMID);
 
-addField("PINCODE",participant.PINCODE);
+add("PINCODE",participant.PINCODE);
 
 }
 
-function addField(name,val){
+function add(name,val){
 
 let form=document.getElementById("form");
 
@@ -189,94 +178,100 @@ let i=document.createElement("input");
 
 i.value=val || "";
 
-i.id=name;
-
 i.disabled=true;
 
 form.appendChild(i);
 
 }
 
-async function checkRegistration(){
+function showButtonsInstant(){
 
-try{
+let buttons=document.getElementById("buttons");
 
-let res=
-await fetch(
-API+
-"?action=checkRegistration"+
-"&event="+EVENT+
-"&name="+participant.Name
+buttons.style.display="block";
+
+let found=
+REGISTRATIONS.find(r=>
+r.Name==participant.Name &&
+r.Registration_Status!="Cancelled"
 );
 
-let data=
-await res.json();
-
-if(data.status=="exists"){
+if(found){
 
 document.getElementById("message")
-.innerText=
-"You are already registered";
-
-showEditButton();
-
-}
-else{
-
-showRegisterButtons();
-
-}
-
-}catch{
-
-showRegisterButtons();
-
-}
-
-}
-
-function showRegisterButtons(){
-
-let buttons=
-document.getElementById("buttons");
-
-buttons.style.display="block";
+.innerText="Already registered";
 
 document.getElementById("registerBtn")
-.style.display="inline";
-
-document.getElementById("editBtn")
-.style.display="inline";
-
-document.getElementById("updateBtn")
-.style.display="none";
-
-}
-
-function showEditButton(){
-
-let buttons=
-document.getElementById("buttons");
-
-buttons.style.display="block";
-
-document.getElementById("registerBtn")
-.style.display="none";
-
-document.getElementById("editBtn")
-.style.display="inline";
-
-document.getElementById("updateBtn")
 .style.display="none";
 
 document.getElementById("editBtn")
 .innerText="Edit my registration";
 
 }
+else{
+
+document.getElementById("registerBtn")
+.style.display="inline";
+
+document.getElementById("editBtn")
+.innerText="I want to edit my details";
+
+}
+
+}
 
 document
 .getElementById("registerBtn")
-.onclick=register;
+.onclick=function(){
+
+register();
+
+};
+
+document
+.getElementById("editBtn")
+.onclick=function(){
+
+enableEdit();
+
+};
+
+function enableEdit(){
+
+document.getElementById("registerBtn")
+.disabled=true;
+
+document.getElementById("updateBtn")
+.style.display="inline";
+
+document.getElementById("editBtn")
+.style.display="none";
+
+unlock("Mobile");
+
+unlock("Email");
+
+unlock("Centre");
+
+unlock("PINCODE");
+
+}
+
+function unlock(name){
+
+let labels=document.getElementsByTagName("label");
+
+for(let i=0;i<labels.length;i++){
+
+if(labels[i].innerText==name){
+
+labels[i].nextSibling.disabled=false;
+
+}
+
+}
+
+}
 
 async function register(){
 
@@ -300,9 +295,7 @@ let data=await res.json();
 if(data.status=="success"){
 
 document.getElementById("message")
-.innerText=
-"Registration successful. ID: "+
-data.registrationId;
+.innerText="Registration successful";
 
 }
 
