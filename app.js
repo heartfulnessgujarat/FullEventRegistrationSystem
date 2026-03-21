@@ -13,6 +13,8 @@ init();
 
 async function init(){
 
+localStorage.removeItem("CFG_EVT001"); // TEMP safety
+
 let cached=localStorage.getItem("CFG_"+EVENT);
 
 let data;
@@ -34,9 +36,7 @@ localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
 
 PARTICIPANTS=data.participants||[];
 REGISTRATIONS=data.registrations||[];
-
-window.CENTRES=data.centres||[];
-CENTRES=window.CENTRES;
+CENTRES=data.centres||[];
 
 setTitles(data.titles);
 
@@ -95,12 +95,16 @@ input.oninput=function(){
 
 list.innerHTML="";
 
-if(!this.value)return;
+let text=this.value.trim();
+
+if(!text)return;
 
 let results=data.filter(r=>
 r[key] &&
-r[key].toLowerCase()
-.startsWith(this.value.toLowerCase())
+r[key].toString()
+.trim()
+.toLowerCase()
+.startsWith(text.toLowerCase())
 );
 
 results.slice(0,10).forEach(r=>{
@@ -110,6 +114,8 @@ let item=document.createElement("div");
 item.innerText=r[key];
 
 item.style.cursor="pointer";
+
+item.style.padding="5px";
 
 item.onclick=function(){
 
@@ -219,15 +225,21 @@ document.getElementById(name).disabled=false;
 
 function enableCentreLookup(){
 
-let centre=document.getElementById("Centre");
+let old=document.getElementById("Centre");
 
-centre.disabled=false;
+/* CLONE FIELD TO RESET EVENTS */
+
+let newCentre=old.cloneNode(true);
+
+old.parentNode.replaceChild(newCentre,old);
+
+newCentre.disabled=false;
 
 let updateBtn=document.getElementById("updateBtn");
 
 updateBtn.disabled=true;
 
-attachLookup(centre,CENTRES,"Centre",(c)=>{
+attachLookup(newCentre,CENTRES,"Centre",(c)=>{
 
 document.getElementById("District").value=c.District;
 
@@ -237,7 +249,7 @@ updateBtn.disabled=false;
 
 });
 
-centre.addEventListener("input",()=>{
+newCentre.addEventListener("input",()=>{
 
 updateBtn.disabled=true;
 
