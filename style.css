@@ -16,21 +16,13 @@ font-weight:600;
 
 }
 
-input,select{
+input{
 
 width:320px;
 
 padding:8px;
 
-margin-top:4px;
-
-margin-bottom:12px;
-
-}
-
-#buttonArea{
-
-margin-top:20px;
+margin-bottom:10px;
 
 }
 
@@ -50,20 +42,12 @@ cursor:pointer;
 
 }
 
-button:disabled{
+#message{
 
-background:gray;
+margin-top:20px;
 
-cursor:not-allowed;
+font-weight:600;
 
-}
-
-#loading{
-
-font-size:14px;
-
-color:gray;
-
-margin-bottom:20px;
+color:green;
 
 }
