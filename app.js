@@ -7,8 +7,6 @@ const EVENT=params.get("event");
 let PARTICIPANTS=[];
 let participant=null;
 
-window.PARTICIPANTS=PARTICIPANTS;
-
 init();
 
 async function init(){
@@ -38,8 +36,6 @@ JSON.stringify(data)
 }
 
 PARTICIPANTS=data.participants || [];
-
-window.PARTICIPANTS=PARTICIPANTS;
 
 setTitles(data.titles);
 
@@ -127,7 +123,7 @@ d.innerText=p.Name;
 
 d.style.cursor="pointer";
 
-d.style.padding="5px";
+d.style.padding="6px";
 
 d.style.borderBottom="1px solid #eee";
 
@@ -203,6 +199,8 @@ form.appendChild(i);
 
 async function checkRegistration(){
 
+try{
+
 let res=
 await fetch(
 API+
@@ -220,13 +218,59 @@ document.getElementById("message")
 .innerText=
 "You are already registered";
 
+showEditButton();
+
 }
 else{
 
-document.getElementById("buttons")
-.style.display="block";
+showRegisterButtons();
 
 }
+
+}catch{
+
+showRegisterButtons();
+
+}
+
+}
+
+function showRegisterButtons(){
+
+let buttons=
+document.getElementById("buttons");
+
+buttons.style.display="block";
+
+document.getElementById("registerBtn")
+.style.display="inline";
+
+document.getElementById("editBtn")
+.style.display="inline";
+
+document.getElementById("updateBtn")
+.style.display="none";
+
+}
+
+function showEditButton(){
+
+let buttons=
+document.getElementById("buttons");
+
+buttons.style.display="block";
+
+document.getElementById("registerBtn")
+.style.display="none";
+
+document.getElementById("editBtn")
+.style.display="inline";
+
+document.getElementById("updateBtn")
+.style.display="none";
+
+document.getElementById("editBtn")
+.innerText="Edit my registration";
 
 }
 
