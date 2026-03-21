@@ -1,7 +1,6 @@
 const API="https://script.google.com/macros/s/AKfycbwMXVVLzngiMoQr3XDlOKldn-_n0qflFgVxInhvkVQD5K5EKOeStm9v0q3hrSlJDjwT/exec";
 
-const params=
-new URLSearchParams(window.location.search);
+const params=new URLSearchParams(window.location.search);
 
 const EVENT=params.get("event");
 
@@ -11,11 +10,20 @@ init();
 
 async function init(){
 
-let res=
-await fetch(API+"?event="+EVENT);
+if(!EVENT){
 
-let data=
-await res.json();
+document.getElementById("message")
+.innerText="Event not specified";
+
+return;
+
+}
+
+let res=await fetch(
+API+"?event="+encodeURIComponent(EVENT)
+);
+
+let data=await res.json();
 
 setTitles(data.titles);
 
@@ -29,18 +37,25 @@ let t=titles.find(x=>x.Property=="Event Title");
 
 let s=titles.find(x=>x.Property=="Event Subtitle");
 
+if(t){
+
 document.getElementById("eventTitle")
 .innerText=t.Value;
+
+}
+
+if(s){
 
 document.getElementById("eventSubtitle")
 .innerText=s.Value;
 
 }
 
+}
+
 function buildName(){
 
-let form=
-document.getElementById("form");
+let form=document.getElementById("form");
 
 form.innerHTML="";
 
@@ -53,6 +68,8 @@ form.appendChild(l);
 let input=document.createElement("input");
 
 input.id="name";
+
+input.autocomplete="off";
 
 input.oninput=function(){
 
@@ -74,13 +91,13 @@ async function searchName(name){
 
 if(name.length<2)return;
 
-let res=
-await fetch(
+let url=
 API+
 "?action=search"+
-"&event="+EVENT+
-"&name="+name
-);
+"&event="+encodeURIComponent(EVENT)+
+"&name="+encodeURIComponent(name);
+
+let res=await fetch(url);
 
 let data=await res.json();
 
@@ -93,6 +110,8 @@ data.participants.forEach(p=>{
 let d=document.createElement("div");
 
 d.innerText=p.Name;
+
+d.style.cursor="pointer";
 
 d.onclick=function(){
 
@@ -114,7 +133,7 @@ document.getElementById("list").innerHTML="";
 
 buildDetails();
 
-checkRegistration();
+await checkRegistration();
 
 }
 
@@ -124,25 +143,25 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-add("Name",participant.Name,false);
+addField("Name",participant.Name);
 
-add("Mobile",participant.Mobile,false);
+addField("Mobile",participant.Mobile);
 
-add("Email",participant.Email,false);
+addField("Email",participant.Email);
 
-add("Centre",participant.Centre,false);
+addField("Centre",participant.Centre);
 
-add("District",participant.District,false);
+addField("District",participant.District);
 
-add("Zone",participant.Zone,false);
+addField("Zone",participant.Zone);
 
-add("SRCMID",participant.SRCMID,false);
+addField("SRCMID",participant.SRCMID);
 
-add("PINCODE",participant.PINCODE,false);
+addField("PINCODE",participant.PINCODE);
 
 }
 
-function add(name,val,editable){
+function addField(name,val){
 
 let form=document.getElementById("form");
 
@@ -158,7 +177,7 @@ i.value=val;
 
 i.id=name;
 
-i.disabled=!editable;
+i.disabled=true;
 
 form.appendChild(i);
 
@@ -166,22 +185,20 @@ form.appendChild(i);
 
 async function checkRegistration(){
 
-let res=
-await fetch(
+let url=
 API+
 "?action=checkRegistration"+
-"&event="+EVENT+
-"&name="+participant.Name
-);
+"&event="+encodeURIComponent(EVENT)+
+"&name="+encodeURIComponent(participant.Name);
 
-let data=
-await res.json();
+let res=await fetch(url);
+
+let data=await res.json();
 
 if(data.status=="exists"){
 
 document.getElementById("message")
-.innerText=
-"You are already registered";
+.innerText="You are already registered";
 
 }
 else{
@@ -199,20 +216,20 @@ document
 
 async function register(){
 
-let res=
-await fetch(
+let url=
 API+
 "?action=register"+
-"&event="+EVENT+
-"&name="+participant.Name+
-"&mobile="+participant.Mobile+
-"&email="+participant.Email+
-"&centre="+participant.Centre+
-"&district="+participant.District+
-"&zone="+participant.Zone+
-"&srcm="+participant.SRCMID+
-"&pincode="+participant.PINCODE
-);
+"&event="+encodeURIComponent(EVENT)+
+"&name="+encodeURIComponent(participant.Name)+
+"&mobile="+encodeURIComponent(participant.Mobile)+
+"&email="+encodeURIComponent(participant.Email)+
+"&centre="+encodeURIComponent(participant.Centre)+
+"&district="+encodeURIComponent(participant.District)+
+"&zone="+encodeURIComponent(participant.Zone)+
+"&srcm="+encodeURIComponent(participant.SRCMID)+
+"&pincode="+encodeURIComponent(participant.PINCODE);
+
+let res=await fetch(url);
 
 let data=await res.json();
 
@@ -220,7 +237,7 @@ if(data.status=="success"){
 
 document.getElementById("message")
 .innerText=
-"Registered. ID: "+
+"Registration successful. ID: "+
 data.registrationId;
 
 }
