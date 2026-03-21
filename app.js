@@ -6,24 +6,41 @@ const EVENT=params.get("event");
 
 let participant=null;
 
+let PARTICIPANTS=[];
+
 init();
 
 async function init(){
 
-if(!EVENT){
+let cached=
+localStorage.getItem("CFG_"+EVENT);
 
-document.getElementById("message")
-.innerText="Event not specified";
+if(cached){
+
+let data=JSON.parse(cached);
+
+PARTICIPANTS=data.participants;
+
+setTitles(data.titles);
+
+buildName();
 
 return;
 
 }
 
-let res=await fetch(
-API+"?event="+encodeURIComponent(EVENT)
-);
+let res=
+await fetch(API+"?event="+EVENT);
 
-let data=await res.json();
+let data=
+await res.json();
+
+PARTICIPANTS=data.participants;
+
+localStorage.setItem(
+"CFG_"+EVENT,
+JSON.stringify(data)
+);
 
 setTitles(data.titles);
 
@@ -37,19 +54,9 @@ let t=titles.find(x=>x.Property=="Event Title");
 
 let s=titles.find(x=>x.Property=="Event Subtitle");
 
-if(t){
+document.getElementById("eventTitle").innerText=t.Value;
 
-document.getElementById("eventTitle")
-.innerText=t.Value;
-
-}
-
-if(s){
-
-document.getElementById("eventSubtitle")
-.innerText=s.Value;
-
-}
+document.getElementById("eventSubtitle").innerText=s.Value;
 
 }
 
@@ -73,7 +80,7 @@ input.autocomplete="off";
 
 input.oninput=function(){
 
-searchName(this.value);
+searchLocal(this.value);
 
 };
 
@@ -87,25 +94,22 @@ form.appendChild(list);
 
 }
 
-async function searchName(name){
-
-if(name.length<2)return;
-
-let url=
-API+
-"?action=search"+
-"&event="+encodeURIComponent(EVENT)+
-"&name="+encodeURIComponent(name);
-
-let res=await fetch(url);
-
-let data=await res.json();
+function searchLocal(name){
 
 let list=document.getElementById("list");
 
 list.innerHTML="";
 
-data.participants.forEach(p=>{
+if(name.length<1)return;
+
+let results=
+PARTICIPANTS.filter(p=>
+p.Name.toLowerCase()
+.startsWith(name.toLowerCase())
+);
+
+results.slice(0,10)
+.forEach(p=>{
 
 let d=document.createElement("div");
 
@@ -125,7 +129,7 @@ list.appendChild(d);
 
 }
 
-async function select(p){
+function select(p){
 
 participant=p;
 
@@ -133,7 +137,7 @@ document.getElementById("list").innerHTML="";
 
 buildDetails();
 
-await checkRegistration();
+checkRegistration();
 
 }
 
@@ -143,25 +147,25 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-addField("Name",participant.Name);
+add("Name",participant.Name);
 
-addField("Mobile",participant.Mobile);
+add("Mobile",participant.Mobile);
 
-addField("Email",participant.Email);
+add("Email",participant.Email);
 
-addField("Centre",participant.Centre);
+add("Centre",participant.Centre);
 
-addField("District",participant.District);
+add("District",participant.District);
 
-addField("Zone",participant.Zone);
+add("Zone",participant.Zone);
 
-addField("SRCMID",participant.SRCMID);
+add("SRCMID",participant.SRCMID);
 
-addField("PINCODE",participant.PINCODE);
+add("PINCODE",participant.PINCODE);
 
 }
 
-function addField(name,val){
+function add(name,val){
 
 let form=document.getElementById("form");
 
@@ -185,13 +189,13 @@ form.appendChild(i);
 
 async function checkRegistration(){
 
-let url=
+let res=
+await fetch(
 API+
 "?action=checkRegistration"+
-"&event="+encodeURIComponent(EVENT)+
-"&name="+encodeURIComponent(participant.Name);
-
-let res=await fetch(url);
+"&event="+EVENT+
+"&name="+participant.Name
+);
 
 let data=await res.json();
 
@@ -216,20 +220,20 @@ document
 
 async function register(){
 
-let url=
+let res=
+await fetch(
 API+
 "?action=register"+
-"&event="+encodeURIComponent(EVENT)+
-"&name="+encodeURIComponent(participant.Name)+
-"&mobile="+encodeURIComponent(participant.Mobile)+
-"&email="+encodeURIComponent(participant.Email)+
-"&centre="+encodeURIComponent(participant.Centre)+
-"&district="+encodeURIComponent(participant.District)+
-"&zone="+encodeURIComponent(participant.Zone)+
-"&srcm="+encodeURIComponent(participant.SRCMID)+
-"&pincode="+encodeURIComponent(participant.PINCODE);
-
-let res=await fetch(url);
+"&event="+EVENT+
+"&name="+participant.Name+
+"&mobile="+participant.Mobile+
+"&email="+participant.Email+
+"&centre="+participant.Centre+
+"&district="+participant.District+
+"&zone="+participant.Zone+
+"&srcm="+participant.SRCMID+
+"&pincode="+participant.PINCODE
+);
 
 let data=await res.json();
 
