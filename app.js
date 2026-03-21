@@ -210,7 +210,15 @@ e.style.display="inline";
 
 u.style.display="none";
 
-r.onclick=register;
+/* REGISTER BUTTON */
+
+r.onclick=function(){
+
+registerParticipant();
+
+};
+
+/* EDIT BUTTON */
 
 e.onclick=editMode;
 
@@ -230,6 +238,12 @@ document.getElementById("editBtn").style.display="none";
 
 document.getElementById("updateBtn").style.display="inline";
 
+document.getElementById("updateBtn").onclick=function(){
+
+registerParticipant();
+
+};
+
 enable("Mobile");
 
 enable("Email");
@@ -246,13 +260,9 @@ document.getElementById(name).disabled=false;
 
 }
 
-/* FINAL CORRECTED CENTRE LOGIC */
-
 function enableCentre(){
 
 let old=document.getElementById("Centre");
-
-/* replace node to clear old state */
 
 let newCentre=old.cloneNode(true);
 
@@ -264,8 +274,6 @@ let updateBtn=document.getElementById("updateBtn");
 
 updateBtn.disabled=true;
 
-/* attach SAME lookup engine as Name */
-
 lookup(newCentre,CENTRES,"Centre",(c)=>{
 
 document.getElementById("District").value=c.District;
@@ -276,8 +284,6 @@ updateBtn.disabled=false;
 
 });
 
-/* disable update while typing */
-
 newCentre.addEventListener("input",function(){
 
 updateBtn.disabled=true;
@@ -286,9 +292,35 @@ updateBtn.disabled=true;
 
 }
 
-function register(){
+/* REAL REGISTRATION */
+
+async function registerParticipant(){
+
+let res=await fetch(
+
+API+
+"?action=register"+
+"&event="+EVENT+
+"&name="+document.getElementById("Name").value+
+"&mobile="+document.getElementById("Mobile").value+
+"&email="+document.getElementById("Email").value+
+"&centre="+document.getElementById("Centre").value+
+"&district="+document.getElementById("District").value+
+"&zone="+document.getElementById("Zone").value+
+"&srcm="+document.getElementById("SRCMID").value+
+"&pincode="+document.getElementById("PINCODE").value
+
+);
+
+let data=await res.json();
+
+if(data.status=="success"){
 
 document.getElementById("message").innerText=
-"Registration working (next step).";
+"Thank you. Your registration is successful.";
+
+document.getElementById("updateBtn").style.display="none";
+
+}
 
 }
