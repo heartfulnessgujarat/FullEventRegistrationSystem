@@ -6,7 +6,11 @@ const EVENT=params.get("event");
 
 let PARTICIPANTS=[];
 let REGISTRATIONS=[];
+let CENTRES=[];
+
 let participant=null;
+
+let EDIT_MODE=false;
 
 init();
 
@@ -39,6 +43,8 @@ JSON.stringify(data)
 PARTICIPANTS=data.participants || [];
 
 REGISTRATIONS=data.registrations || [];
+
+CENTRES=data.centres || [];
 
 setTitles(data.titles);
 
@@ -100,7 +106,6 @@ if(!text)return;
 
 let results=
 PARTICIPANTS.filter(p=>
-p.Name &&
 p.Name.toLowerCase()
 .startsWith(text.toLowerCase())
 );
@@ -113,8 +118,6 @@ let d=document.createElement("div");
 d.innerText=p.Name;
 
 d.style.cursor="pointer";
-
-d.style.padding="6px";
 
 d.onclick=function(){
 
@@ -134,17 +137,9 @@ participant=p;
 
 document.getElementById("list").innerHTML="";
 
-/* SHOW BUTTONS FIRST */
-
-showButtonsInstant();
-
-/* RENDER DETAILS AFTER */
-
-setTimeout(()=>{
+showButtons();
 
 buildDetails();
-
-},50);
 
 }
 
@@ -154,25 +149,25 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-add("Name",participant.Name);
+add("Name",participant.Name,false);
 
-add("Mobile",participant.Mobile);
+add("Mobile",participant.Mobile,false);
 
-add("Email",participant.Email);
+add("Email",participant.Email,false);
 
-add("Centre",participant.Centre);
+add("Centre",participant.Centre,false);
 
-add("District",participant.District);
+add("District",participant.District,false);
 
-add("Zone",participant.Zone);
+add("Zone",participant.Zone,false);
 
-add("SRCMID",participant.SRCMID);
+add("SRCMID",participant.SRCMID,false);
 
-add("PINCODE",participant.PINCODE);
+add("PINCODE",participant.PINCODE,false);
 
 }
 
-function add(name,val){
+function add(name,val,editable){
 
 let form=document.getElementById("form");
 
@@ -186,45 +181,133 @@ let i=document.createElement("input");
 
 i.value=val || "";
 
-i.disabled=true;
+i.id=name;
+
+i.disabled=!editable;
 
 form.appendChild(i);
 
 }
 
-function showButtonsInstant(){
+function showButtons(){
 
-let buttons=document.getElementById("buttons");
+document.getElementById("buttons").style.display="block";
 
-buttons.style.display="block";
+document.getElementById("registerBtn").disabled=false;
 
-let found=
-REGISTRATIONS.find(r=>
-r.Name==participant.Name &&
-r.Registration_Status!="Cancelled"
+document.getElementById("registerBtn").style.display="inline";
+
+document.getElementById("editBtn").style.display="inline";
+
+document.getElementById("updateBtn").style.display="none";
+
+}
+
+document
+.getElementById("editBtn")
+.onclick=function(){
+
+enterEditMode();
+
+};
+
+function enterEditMode(){
+
+EDIT_MODE=true;
+
+document.getElementById("registerBtn").disabled=true;
+
+document.getElementById("editBtn").style.display="none";
+
+document.getElementById("updateBtn").style.display="inline";
+
+enable("Mobile");
+
+enable("Email");
+
+enableCentre();
+
+enable("PINCODE");
+
+}
+
+function enable(name){
+
+document.getElementById(name).disabled=false;
+
+}
+
+function enableCentre(){
+
+let c=document.getElementById("Centre");
+
+c.disabled=false;
+
+c.oninput=function(){
+
+document.getElementById("updateBtn").disabled=true;
+
+centreSearch(this.value);
+
+};
+
+}
+
+function centreSearch(text){
+
+let list=document.getElementById("centreList");
+
+if(!list){
+
+list=document.createElement("div");
+
+list.id="centreList";
+
+document.getElementById("Centre")
+.after(list);
+
+}
+
+list.innerHTML="";
+
+let results=
+CENTRES.filter(c=>
+c.Centre.toLowerCase()
+.startsWith(text.toLowerCase())
 );
 
-if(found){
+results.slice(0,10)
+.forEach(c=>{
 
-document.getElementById("message")
-.innerText="Already registered";
+let d=document.createElement("div");
 
-document.getElementById("registerBtn")
-.style.display="none";
+d.innerText=c.Centre;
 
-document.getElementById("editBtn")
-.innerText="Edit my registration";
+d.style.cursor="pointer";
+
+d.onclick=function(){
+
+selectCentre(c);
+
+};
+
+list.appendChild(d);
+
+});
 
 }
-else{
 
-document.getElementById("registerBtn")
-.style.display="inline";
+function selectCentre(c){
 
-document.getElementById("editBtn")
-.innerText="I want to edit my details";
+document.getElementById("Centre").value=c.Centre;
 
-}
+document.getElementById("District").value=c.District;
+
+document.getElementById("Zone").value=c.Zone;
+
+document.getElementById("centreList").innerHTML="";
+
+document.getElementById("updateBtn").disabled=false;
 
 }
 
@@ -235,51 +318,6 @@ document
 register();
 
 };
-
-document
-.getElementById("editBtn")
-.onclick=function(){
-
-enableEdit();
-
-};
-
-function enableEdit(){
-
-document.getElementById("registerBtn")
-.disabled=true;
-
-document.getElementById("updateBtn")
-.style.display="inline";
-
-document.getElementById("editBtn")
-.style.display="none";
-
-unlock("Mobile");
-
-unlock("Email");
-
-unlock("Centre");
-
-unlock("PINCODE");
-
-}
-
-function unlock(name){
-
-let labels=document.getElementsByTagName("label");
-
-for(let i=0;i<labels.length;i++){
-
-if(labels[i].innerText==name){
-
-labels[i].nextSibling.disabled=false;
-
-}
-
-}
-
-}
 
 async function register(){
 
