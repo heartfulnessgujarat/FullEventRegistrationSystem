@@ -4,9 +4,10 @@ const params=new URLSearchParams(window.location.search);
 
 const EVENT=params.get("event");
 
+let PARTICIPANTS=[];
 let participant=null;
 
-let PARTICIPANTS=[];
+window.PARTICIPANTS=PARTICIPANTS;
 
 init();
 
@@ -15,32 +16,30 @@ async function init(){
 let cached=
 localStorage.getItem("CFG_"+EVENT);
 
+let data;
+
 if(cached){
 
-let data=JSON.parse(cached);
-
-PARTICIPANTS=data.participants;
-
-setTitles(data.titles);
-
-buildName();
-
-return;
+data=JSON.parse(cached);
 
 }
+else{
 
 let res=
 await fetch(API+"?event="+EVENT);
 
-let data=
-await res.json();
-
-PARTICIPANTS=data.participants;
+data=await res.json();
 
 localStorage.setItem(
 "CFG_"+EVENT,
 JSON.stringify(data)
 );
+
+}
+
+PARTICIPANTS=data.participants || [];
+
+window.PARTICIPANTS=PARTICIPANTS;
 
 setTitles(data.titles);
 
@@ -54,9 +53,19 @@ let t=titles.find(x=>x.Property=="Event Title");
 
 let s=titles.find(x=>x.Property=="Event Subtitle");
 
-document.getElementById("eventTitle").innerText=t.Value;
+if(t){
 
-document.getElementById("eventSubtitle").innerText=s.Value;
+document.getElementById("eventTitle")
+.innerText=t.Value;
+
+}
+
+if(s){
+
+document.getElementById("eventSubtitle")
+.innerText=s.Value;
+
+}
 
 }
 
@@ -94,18 +103,19 @@ form.appendChild(list);
 
 }
 
-function searchLocal(name){
+function searchLocal(text){
 
 let list=document.getElementById("list");
 
 list.innerHTML="";
 
-if(name.length<1)return;
+if(!text)return;
 
 let results=
 PARTICIPANTS.filter(p=>
+p.Name &&
 p.Name.toLowerCase()
-.startsWith(name.toLowerCase())
+.startsWith(text.toLowerCase())
 );
 
 results.slice(0,10)
@@ -117,9 +127,13 @@ d.innerText=p.Name;
 
 d.style.cursor="pointer";
 
+d.style.padding="5px";
+
+d.style.borderBottom="1px solid #eee";
+
 d.onclick=function(){
 
-select(p);
+selectParticipant(p);
 
 };
 
@@ -129,7 +143,7 @@ list.appendChild(d);
 
 }
 
-function select(p){
+function selectParticipant(p){
 
 participant=p;
 
@@ -147,25 +161,25 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-add("Name",participant.Name);
+addField("Name",participant.Name);
 
-add("Mobile",participant.Mobile);
+addField("Mobile",participant.Mobile);
 
-add("Email",participant.Email);
+addField("Email",participant.Email);
 
-add("Centre",participant.Centre);
+addField("Centre",participant.Centre);
 
-add("District",participant.District);
+addField("District",participant.District);
 
-add("Zone",participant.Zone);
+addField("Zone",participant.Zone);
 
-add("SRCMID",participant.SRCMID);
+addField("SRCMID",participant.SRCMID);
 
-add("PINCODE",participant.PINCODE);
+addField("PINCODE",participant.PINCODE);
 
 }
 
-function add(name,val){
+function addField(name,val){
 
 let form=document.getElementById("form");
 
@@ -177,7 +191,7 @@ form.appendChild(l);
 
 let i=document.createElement("input");
 
-i.value=val;
+i.value=val || "";
 
 i.id=name;
 
@@ -197,12 +211,14 @@ API+
 "&name="+participant.Name
 );
 
-let data=await res.json();
+let data=
+await res.json();
 
 if(data.status=="exists"){
 
 document.getElementById("message")
-.innerText="You are already registered";
+.innerText=
+"You are already registered";
 
 }
 else{
