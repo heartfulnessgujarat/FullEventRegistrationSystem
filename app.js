@@ -14,8 +14,7 @@ init();
 
 async function init(){
 
-let cached=
-localStorage.getItem("CFG_"+EVENT);
+let cached=localStorage.getItem("CFG_"+EVENT);
 
 let data;
 
@@ -26,15 +25,11 @@ data=JSON.parse(cached);
 }
 else{
 
-let res=
-await fetch(API+"?event="+EVENT);
+let res=await fetch(API+"?event="+EVENT);
 
 data=await res.json();
 
-localStorage.setItem(
-"CFG_"+EVENT,
-JSON.stringify(data)
-);
+localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
 
 }
 
@@ -68,52 +63,72 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-let l=document.createElement("label");
+let label=document.createElement("label");
 
-l.innerText="Name";
+label.innerText="Name";
 
-form.appendChild(l);
+form.appendChild(label);
 
 let input=document.createElement("input");
 
+input.id="Name";
+
 input.autocomplete="off";
-
-input.oninput=function(){
-
-searchLocal(this.value);
-
-};
 
 form.appendChild(input);
 
-let list=document.createElement("div");
+attachLookup(
 
-list.id="list";
+"Name",
 
-form.appendChild(list);
+PARTICIPANTS,
+
+"Name",
+
+function(p){
+
+participant=p;
+
+buildDetails();
+
+prepareButtons();
 
 }
 
-function searchLocal(text){
+);
 
-let list=document.getElementById("list");
+}
+
+function attachLookup(field,data,key,onSelect){
+
+let input=document.getElementById(field);
+
+let list=document.createElement("div");
+
+list.id=field+"List";
+
+input.after(list);
+
+input.oninput=function(){
 
 list.innerHTML="";
 
+let text=this.value;
+
 if(!text)return;
 
-let results=
-PARTICIPANTS.filter(p=>
-p.Name.toLowerCase()
+let results=data.filter(r=>
+r[key] &&
+r[key].toLowerCase()
 .startsWith(text.toLowerCase())
 );
 
 results.slice(0,10)
-.forEach(p=>{
+.forEach(r=>{
 
 let d=document.createElement("div");
 
-d.innerText=p.Name;
+d.innerText=r[key];
 
 d.style.cursor="pointer";
 
@@ -121,7 +136,11 @@ d.style.padding="6px";
 
 d.onclick=function(){
 
-selectParticipant(p);
+input.value=r[key];
+
+list.innerHTML="";
+
+onSelect(r);
 
 };
 
@@ -129,17 +148,7 @@ list.appendChild(d);
 
 });
 
-}
-
-function selectParticipant(p){
-
-participant=p;
-
-document.getElementById("list").innerHTML="";
-
-buildDetails();
-
-prepareButtons();
+};
 
 }
 
@@ -195,68 +204,33 @@ let buttons=document.getElementById("buttons");
 
 buttons.style.display="block";
 
-let found=
-REGISTRATIONS.find(r=>
-r.Name==participant.Name &&
-r.Registration_Status!="Cancelled"
-);
+document.getElementById("registerBtn").disabled=false;
 
-let registerBtn=document.getElementById("registerBtn");
+document.getElementById("editBtn").style.display="inline";
 
-let editBtn=document.getElementById("editBtn");
+document.getElementById("updateBtn").style.display="none";
 
-let updateBtn=document.getElementById("updateBtn");
+document.getElementById("registerBtn").onclick=register;
 
-updateBtn.style.display="none";
-
-registerBtn.disabled=false;
-
-editBtn.style.display="inline";
-
-if(found){
-
-registerBtn.style.display="none";
-
-editBtn.innerText="Edit my registration";
-
-}
-else{
-
-registerBtn.style.display="inline";
-
-editBtn.innerText="I want to edit my details";
-
-}
-
-registerBtn.onclick=register;
-
-editBtn.onclick=enterEditMode;
-
-updateBtn.onclick=updateRegistration;
+document.getElementById("editBtn").onclick=enterEditMode;
 
 }
 
 function enterEditMode(){
 
-let registerBtn=document.getElementById("registerBtn");
+document.getElementById("registerBtn").disabled=true;
 
-let editBtn=document.getElementById("editBtn");
+document.getElementById("editBtn").style.display="none";
 
-let updateBtn=document.getElementById("updateBtn");
-
-registerBtn.disabled=true;
-
-editBtn.style.display="none";
-
-updateBtn.style.display="inline";
+document.getElementById("updateBtn").style.display="inline";
 
 enableField("Mobile");
 
 enableField("Email");
 
-enableCentreField();
-
 enableField("PINCODE");
+
+enableCentreLookup();
 
 }
 
@@ -266,83 +240,40 @@ document.getElementById(name).disabled=false;
 
 }
 
-function enableCentreField(){
+function enableCentreLookup(){
 
 let centre=document.getElementById("Centre");
 
 centre.disabled=false;
 
-centre.oninput=function(){
+attachLookup(
 
-document.getElementById("updateBtn").disabled=true;
+"Centre",
 
-centreLookup(this.value);
+CENTRES,
 
-};
+"Centre",
 
-}
-
-function centreLookup(text){
-
-let existing=document.getElementById("centreList");
-
-if(!existing){
-
-existing=document.createElement("div");
-
-existing.id="centreList";
-
-document.getElementById("Centre").after(existing);
-
-}
-
-existing.innerHTML="";
-
-let results=
-CENTRES.filter(c=>
-c.Centre.toLowerCase()
-.startsWith(text.toLowerCase())
-);
-
-results.slice(0,10)
-.forEach(c=>{
-
-let d=document.createElement("div");
-
-d.innerText=c.Centre;
-
-d.style.cursor="pointer";
-
-d.onclick=function(){
-
-selectCentre(c);
-
-};
-
-existing.appendChild(d);
-
-});
-
-}
-
-function selectCentre(c){
-
-document.getElementById("Centre").value=c.Centre;
+function(c){
 
 document.getElementById("District").value=c.District;
 
 document.getElementById("Zone").value=c.Zone;
 
-document.getElementById("centreList").innerHTML="";
-
 document.getElementById("updateBtn").disabled=false;
+
+}
+
+);
+
+document.getElementById("updateBtn").disabled=true;
 
 }
 
 async function register(){
 
-let res=
-await fetch(
+let res=await fetch(
+
 API+
 "?action=register"+
 "&event="+EVENT+
@@ -354,6 +285,7 @@ API+
 "&zone="+participant.Zone+
 "&srcm="+participant.SRCMID+
 "&pincode="+participant.PINCODE
+
 );
 
 let data=await res.json();
@@ -364,12 +296,5 @@ document.getElementById("message")
 .innerText="Registration successful";
 
 }
-
-}
-
-function updateRegistration(){
-
-document.getElementById("message")
-.innerText="Update flow next step";
 
 }
