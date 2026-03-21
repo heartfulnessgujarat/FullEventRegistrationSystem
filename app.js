@@ -34,7 +34,9 @@ localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
 
 PARTICIPANTS=data.participants||[];
 REGISTRATIONS=data.registrations||[];
-CENTRES=data.centres||[];
+
+window.CENTRES=data.centres||[];
+CENTRES=window.CENTRES;
 
 setTitles(data.titles);
 
@@ -224,8 +226,6 @@ centre.disabled=false;
 let updateBtn=document.getElementById("updateBtn");
 
 updateBtn.disabled=true;
-
-/* THIS IS THE IMPORTANT FIX */
 
 attachLookup(centre,CENTRES,"Centre",(c)=>{
 
