@@ -7,7 +7,6 @@ const EVENT=params.get("event");
 let PARTICIPANTS=[];
 let REGISTRATIONS=[];
 let CENTRES=[];
-
 let participant=null;
 
 init();
@@ -33,11 +32,9 @@ localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
 
 }
 
-PARTICIPANTS=data.participants || [];
-
-REGISTRATIONS=data.registrations || [];
-
-CENTRES=data.centres || [];
+PARTICIPANTS=data.participants||[];
+REGISTRATIONS=data.registrations||[];
+CENTRES=data.centres||[];
 
 setTitles(data.titles);
 
@@ -47,13 +44,11 @@ buildName();
 
 function setTitles(titles){
 
-let t=titles.find(x=>x.Property=="Event Title");
+document.getElementById("eventTitle").innerText=
+titles.find(t=>t.Property=="Event Title").Value;
 
-let s=titles.find(x=>x.Property=="Event Subtitle");
-
-document.getElementById("eventTitle").innerText=t.Value;
-
-document.getElementById("eventSubtitle").innerText=s.Value;
+document.getElementById("eventSubtitle").innerText=
+titles.find(t=>t.Property=="Event Subtitle").Value;
 
 }
 
@@ -64,7 +59,6 @@ let form=document.getElementById("form");
 form.innerHTML="";
 
 let label=document.createElement("label");
-
 label.innerText="Name";
 
 form.appendChild(label);
@@ -73,32 +67,25 @@ let input=document.createElement("input");
 
 input.id="Name";
 
-input.autocomplete="off";
-
 form.appendChild(input);
 
-createLookup(
-
-input,
-PARTICIPANTS,
-"Name",
-function(p){
+attachLookup(input,PARTICIPANTS,"Name",(p)=>{
 
 participant=p;
 
 buildDetails();
 
-prepareButtons();
+showButtons();
+
+});
 
 }
 
-);
-
-}
-
-function createLookup(input,data,key,onSelect){
+function attachLookup(input,data,key,callback){
 
 let list=document.createElement("div");
+
+list.style.border="1px solid #ccc";
 
 input.after(list);
 
@@ -106,18 +93,15 @@ input.oninput=function(){
 
 list.innerHTML="";
 
-let text=this.value;
-
-if(!text)return;
+if(!this.value)return;
 
 let results=data.filter(r=>
 r[key] &&
 r[key].toLowerCase()
-.startsWith(text.toLowerCase())
+.startsWith(this.value.toLowerCase())
 );
 
-results.slice(0,10)
-.forEach(r=>{
+results.slice(0,10).forEach(r=>{
 
 let item=document.createElement("div");
 
@@ -125,15 +109,13 @@ item.innerText=r[key];
 
 item.style.cursor="pointer";
 
-item.style.padding="5px";
-
 item.onclick=function(){
 
 input.value=r[key];
 
 list.innerHTML="";
 
-onSelect(r);
+callback(r);
 
 };
 
@@ -183,7 +165,7 @@ let input=document.createElement("input");
 
 input.id=name;
 
-input.value=value || "";
+input.value=value||"";
 
 input.disabled=!editable;
 
@@ -191,31 +173,25 @@ form.appendChild(input);
 
 }
 
-function prepareButtons(){
+function showButtons(){
 
 let buttons=document.getElementById("buttons");
 
 buttons.style.display="block";
 
-let registerBtn=document.getElementById("registerBtn");
+document.getElementById("registerBtn").disabled=false;
 
-let editBtn=document.getElementById("editBtn");
+document.getElementById("editBtn").style.display="inline";
 
-let updateBtn=document.getElementById("updateBtn");
+document.getElementById("updateBtn").style.display="none";
 
-updateBtn.style.display="none";
+document.getElementById("registerBtn").onclick=register;
 
-registerBtn.disabled=false;
-
-editBtn.style.display="inline";
-
-registerBtn.onclick=register;
-
-editBtn.onclick=enterEditMode;
+document.getElementById("editBtn").onclick=enableEdit;
 
 }
 
-function enterEditMode(){
+function enableEdit(){
 
 document.getElementById("registerBtn").disabled=true;
 
@@ -229,7 +205,7 @@ enableField("Email");
 
 enableField("PINCODE");
 
-enableCentre();
+enableCentreLookup();
 
 }
 
@@ -239,7 +215,7 @@ document.getElementById(name).disabled=false;
 
 }
 
-function enableCentre(){
+function enableCentreLookup(){
 
 let centre=document.getElementById("Centre");
 
@@ -247,15 +223,11 @@ centre.disabled=false;
 
 let updateBtn=document.getElementById("updateBtn");
 
-updateBtn.disabled=false;
+updateBtn.disabled=true;
 
-createLookup(
+/* THIS IS THE IMPORTANT FIX */
 
-centre,
-CENTRES,
-"Centre",
-
-function(c){
+attachLookup(centre,CENTRES,"Centre",(c)=>{
 
 document.getElementById("District").value=c.District;
 
@@ -263,22 +235,19 @@ document.getElementById("Zone").value=c.Zone;
 
 updateBtn.disabled=false;
 
-}
+});
 
-);
-
-centre.oninput=function(){
+centre.addEventListener("input",()=>{
 
 updateBtn.disabled=true;
 
-};
+});
 
 }
 
 async function register(){
 
 let res=await fetch(
-
 API+
 "?action=register"+
 "&event="+EVENT+
@@ -290,7 +259,6 @@ API+
 "&zone="+participant.Zone+
 "&srcm="+participant.SRCMID+
 "&pincode="+participant.PINCODE
-
 );
 
 let data=await res.json();
