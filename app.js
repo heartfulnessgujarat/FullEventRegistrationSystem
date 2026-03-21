@@ -134,9 +134,17 @@ participant=p;
 
 document.getElementById("list").innerHTML="";
 
-buildDetails();
+/* SHOW BUTTONS FIRST */
 
 showButtonsInstant();
+
+/* RENDER DETAILS AFTER */
+
+setTimeout(()=>{
+
+buildDetails();
+
+},50);
 
 }
 
