@@ -10,8 +10,6 @@ let CENTRES=[];
 
 let participant=null;
 
-let EDIT_MODE=false;
-
 init();
 
 async function init(){
@@ -119,6 +117,8 @@ d.innerText=p.Name;
 
 d.style.cursor="pointer";
 
+d.style.padding="6px";
+
 d.onclick=function(){
 
 selectParticipant(p);
@@ -137,9 +137,9 @@ participant=p;
 
 document.getElementById("list").innerHTML="";
 
-showButtons();
-
 buildDetails();
+
+prepareButtons();
 
 }
 
@@ -149,126 +149,154 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-add("Name",participant.Name,false);
+createField("Name",participant.Name,false);
 
-add("Mobile",participant.Mobile,false);
+createField("Mobile",participant.Mobile,false);
 
-add("Email",participant.Email,false);
+createField("Email",participant.Email,false);
 
-add("Centre",participant.Centre,false);
+createField("Centre",participant.Centre,false);
 
-add("District",participant.District,false);
+createField("District",participant.District,false);
 
-add("Zone",participant.Zone,false);
+createField("Zone",participant.Zone,false);
 
-add("SRCMID",participant.SRCMID,false);
+createField("SRCMID",participant.SRCMID,false);
 
-add("PINCODE",participant.PINCODE,false);
+createField("PINCODE",participant.PINCODE,false);
 
 }
 
-function add(name,val,editable){
+function createField(name,value,editable){
 
 let form=document.getElementById("form");
 
-let l=document.createElement("label");
+let label=document.createElement("label");
 
-l.innerText=name;
+label.innerText=name;
 
-form.appendChild(l);
+form.appendChild(label);
 
-let i=document.createElement("input");
+let input=document.createElement("input");
 
-i.value=val || "";
+input.id=name;
 
-i.id=name;
+input.value=value || "";
 
-i.disabled=!editable;
+input.disabled=!editable;
 
-form.appendChild(i);
-
-}
-
-function showButtons(){
-
-document.getElementById("buttons").style.display="block";
-
-document.getElementById("registerBtn").disabled=false;
-
-document.getElementById("registerBtn").style.display="inline";
-
-document.getElementById("editBtn").style.display="inline";
-
-document.getElementById("updateBtn").style.display="none";
+form.appendChild(input);
 
 }
 
-document
-.getElementById("editBtn")
-.onclick=function(){
+function prepareButtons(){
 
-enterEditMode();
+let buttons=document.getElementById("buttons");
 
-};
+buttons.style.display="block";
+
+let found=
+REGISTRATIONS.find(r=>
+r.Name==participant.Name &&
+r.Registration_Status!="Cancelled"
+);
+
+let registerBtn=document.getElementById("registerBtn");
+
+let editBtn=document.getElementById("editBtn");
+
+let updateBtn=document.getElementById("updateBtn");
+
+updateBtn.style.display="none";
+
+registerBtn.disabled=false;
+
+editBtn.style.display="inline";
+
+if(found){
+
+registerBtn.style.display="none";
+
+editBtn.innerText="Edit my registration";
+
+}
+else{
+
+registerBtn.style.display="inline";
+
+editBtn.innerText="I want to edit my details";
+
+}
+
+registerBtn.onclick=register;
+
+editBtn.onclick=enterEditMode;
+
+updateBtn.onclick=updateRegistration;
+
+}
 
 function enterEditMode(){
 
-EDIT_MODE=true;
+let registerBtn=document.getElementById("registerBtn");
 
-document.getElementById("registerBtn").disabled=true;
+let editBtn=document.getElementById("editBtn");
 
-document.getElementById("editBtn").style.display="none";
+let updateBtn=document.getElementById("updateBtn");
 
-document.getElementById("updateBtn").style.display="inline";
+registerBtn.disabled=true;
 
-enable("Mobile");
+editBtn.style.display="none";
 
-enable("Email");
+updateBtn.style.display="inline";
 
-enableCentre();
+enableField("Mobile");
 
-enable("PINCODE");
+enableField("Email");
+
+enableCentreField();
+
+enableField("PINCODE");
 
 }
 
-function enable(name){
+function enableField(name){
 
 document.getElementById(name).disabled=false;
 
 }
 
-function enableCentre(){
+function enableCentreField(){
 
-let c=document.getElementById("Centre");
+let centre=document.getElementById("Centre");
 
-c.disabled=false;
+centre.disabled=false;
 
-c.oninput=function(){
+centre.oninput=function(){
 
 document.getElementById("updateBtn").disabled=true;
 
-centreSearch(this.value);
+centreLookup(this.value);
 
 };
 
 }
 
-function centreSearch(text){
+function centreLookup(text){
 
-let list=document.getElementById("centreList");
+let existing=document.getElementById("centreList");
 
-if(!list){
+if(!existing){
 
-list=document.createElement("div");
+existing=document.createElement("div");
 
-list.id="centreList";
+existing.id="centreList";
 
-document.getElementById("Centre")
-.after(list);
+document.getElementById("Centre").after(existing);
 
 }
 
-list.innerHTML="";
+existing.innerHTML="";
 
 let results=
 CENTRES.filter(c=>
@@ -291,7 +319,7 @@ selectCentre(c);
 
 };
 
-list.appendChild(d);
+existing.appendChild(d);
 
 });
 
@@ -310,14 +338,6 @@ document.getElementById("centreList").innerHTML="";
 document.getElementById("updateBtn").disabled=false;
 
 }
-
-document
-.getElementById("registerBtn")
-.onclick=function(){
-
-register();
-
-};
 
 async function register(){
 
@@ -344,5 +364,12 @@ document.getElementById("message")
 .innerText="Registration successful";
 
 }
+
+}
+
+function updateRegistration(){
+
+document.getElementById("message")
+.innerText="Update flow next step";
 
 }
