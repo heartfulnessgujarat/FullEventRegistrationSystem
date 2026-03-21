@@ -13,26 +13,9 @@ init();
 
 async function init(){
 
-localStorage.removeItem("CFG_EVT001"); // TEMP safety
-
-let cached=localStorage.getItem("CFG_"+EVENT);
-
-let data;
-
-if(cached){
-
-data=JSON.parse(cached);
-
-}
-else{
-
 let res=await fetch(API+"?event="+EVENT);
 
-data=await res.json();
-
-localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
-
-}
+let data=await res.json();
 
 PARTICIPANTS=data.participants||[];
 REGISTRATIONS=data.registrations||[];
@@ -87,7 +70,13 @@ function attachLookup(input,data,key,callback){
 
 let list=document.createElement("div");
 
-list.style.border="1px solid #ccc";
+/* HIDDEN BY DEFAULT */
+
+list.style.display="none";
+
+list.style.background="white";
+
+list.style.position="relative";
 
 input.after(list);
 
@@ -97,7 +86,12 @@ list.innerHTML="";
 
 let text=this.value.trim();
 
-if(!text)return;
+if(!text){
+
+list.style.display="none";
+return;
+
+}
 
 let results=data.filter(r=>
 r[key] &&
@@ -107,6 +101,17 @@ r[key].toString()
 .startsWith(text.toLowerCase())
 );
 
+if(results.length==0){
+
+list.style.display="none";
+return;
+
+}
+
+/* SHOW ONLY WHEN RESULTS EXIST */
+
+list.style.display="block";
+
 results.slice(0,10).forEach(r=>{
 
 let item=document.createElement("div");
@@ -115,13 +120,28 @@ item.innerText=r[key];
 
 item.style.cursor="pointer";
 
-item.style.padding="5px";
+item.style.padding="6px";
+
+item.style.border="1px solid #eee";
+
+item.onmouseover=function(){
+
+this.style.background="#f5f5f5";
+
+};
+
+item.onmouseout=function(){
+
+this.style.background="white";
+
+};
 
 item.onclick=function(){
 
 input.value=r[key];
 
 list.innerHTML="";
+list.style.display="none";
 
 callback(r);
 
@@ -187,21 +207,41 @@ let buttons=document.getElementById("buttons");
 
 buttons.style.display="block";
 
-document.getElementById("registerBtn").disabled=false;
+let registerBtn=document.getElementById("registerBtn");
 
-document.getElementById("editBtn").style.display="inline";
+let editBtn=document.getElementById("editBtn");
 
-document.getElementById("updateBtn").style.display="none";
+let updateBtn=document.getElementById("updateBtn");
 
-document.getElementById("registerBtn").onclick=register;
+registerBtn.disabled=false;
 
-document.getElementById("editBtn").onclick=enableEdit;
+registerBtn.style.opacity="1";
+
+registerBtn.style.pointerEvents="auto";
+
+editBtn.style.display="inline";
+
+updateBtn.style.display="none";
+
+registerBtn.onclick=register;
+
+editBtn.onclick=enableEdit;
 
 }
 
 function enableEdit(){
 
-document.getElementById("registerBtn").disabled=true;
+let registerBtn=document.getElementById("registerBtn");
+
+registerBtn.disabled=true;
+
+/* HARD DISABLE */
+
+registerBtn.style.pointerEvents="none";
+
+registerBtn.style.opacity="0.5";
+
+registerBtn.onclick=null;
 
 document.getElementById("editBtn").style.display="none";
 
@@ -226,8 +266,6 @@ document.getElementById(name).disabled=false;
 function enableCentreLookup(){
 
 let old=document.getElementById("Centre");
-
-/* CLONE FIELD TO RESET EVENTS */
 
 let newCentre=old.cloneNode(true);
 
