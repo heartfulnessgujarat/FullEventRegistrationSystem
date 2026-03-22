@@ -6,6 +6,7 @@ const EVENT=params.get("event");
 
 let PARTICIPANTS=[];
 let CENTRES=[];
+let RULES=[];
 let participant=null;
 
 init();
@@ -32,7 +33,10 @@ localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
 }
 
 PARTICIPANTS=data.participants||[];
+
 CENTRES=data.centres||[];
+
+RULES=data.rules||[];
 
 setTitles(data.titles);
 
@@ -85,8 +89,11 @@ function lookup(input,data,key,callback){
 let list=document.createElement("div");
 
 list.style.position="absolute";
+
 list.style.background="white";
+
 list.style.zIndex="1000";
+
 list.style.display="none";
 
 input.after(list);
@@ -100,6 +107,7 @@ let text=this.value.trim();
 if(!text){
 
 list.style.display="none";
+
 return;
 
 }
@@ -113,6 +121,7 @@ r[key].toLowerCase()
 if(results.length==0){
 
 list.style.display="none";
+
 return;
 
 }
@@ -191,6 +200,30 @@ i.disabled=!editable;
 
 form.appendChild(i);
 
+/* DYNAMIC HELP */
+
+let rule=RULES.find(r=>r.Field_Name==name);
+
+if(rule && rule.Help_Text){
+
+let help=document.createElement("div");
+
+help.id="help_"+name;
+
+help.innerText=rule.Help_Text;
+
+help.style.fontSize="12px";
+
+help.style.color="#777";
+
+help.style.fontStyle="italic";
+
+help.style.display="none";
+
+form.appendChild(help);
+
+}
+
 }
 
 function showButtons(){
@@ -241,6 +274,26 @@ enable("Email");
 enable("PINCODE");
 
 enableCentre();
+
+/* SHOW HELP FOR ALL RULES */
+
+RULES.forEach(rule=>{
+
+showHelp(rule.Field_Name);
+
+});
+
+}
+
+function showHelp(name){
+
+let h=document.getElementById("help_"+name);
+
+if(h){
+
+h.style.display="block";
+
+}
 
 }
 
