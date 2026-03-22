@@ -32,7 +32,6 @@ localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
 }
 
 PARTICIPANTS=data.participants||[];
-
 CENTRES=data.centres||[];
 
 setTitles(data.titles);
@@ -86,11 +85,8 @@ function lookup(input,data,key,callback){
 let list=document.createElement("div");
 
 list.style.position="absolute";
-
 list.style.background="white";
-
 list.style.zIndex="1000";
-
 list.style.display="none";
 
 input.after(list);
@@ -104,7 +100,6 @@ let text=this.value.trim();
 if(!text){
 
 list.style.display="none";
-
 return;
 
 }
@@ -118,7 +113,6 @@ r[key].toLowerCase()
 if(results.length==0){
 
 list.style.display="none";
-
 return;
 
 }
@@ -316,6 +310,8 @@ data.message;
 document.getElementById("registerBtn").disabled=true;
 
 document.getElementById("updateBtn").disabled=true;
+
+document.getElementById("editBtn").disabled=true;
 
 }
 
