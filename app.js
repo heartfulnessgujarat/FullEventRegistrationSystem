@@ -4,41 +4,26 @@ const params=new URLSearchParams(window.location.search);
 
 const EVENT=params.get("event");
 
-let PARTICIPANTS=[];
-let CENTRES=[];
+let CONFIG;
 let RULES=[];
+let CENTRES=[];
 let participant=null;
+
+let verified=false;
 
 init();
 
 async function init(){
 
-let cached=localStorage.getItem("CFG_"+EVENT);
-
-let data;
-
-if(cached){
-
-data=JSON.parse(cached);
-
-}
-else{
-
 let res=await fetch(API+"?event="+EVENT);
 
-data=await res.json();
+CONFIG=await res.json();
 
-localStorage.setItem("CFG_"+EVENT,JSON.stringify(data));
+RULES=CONFIG.rules||[];
 
-}
+CENTRES=CONFIG.centres||[];
 
-PARTICIPANTS=data.participants||[];
-
-CENTRES=data.centres||[];
-
-RULES=data.rules||[];
-
-setTitles(data.titles);
+setTitles(CONFIG.titles);
 
 buildName();
 
@@ -46,10 +31,12 @@ buildName();
 
 function setTitles(titles){
 
-document.getElementById("eventTitle").innerText=
+document.getElementById("eventTitle")
+.innerText=
 titles.find(t=>t.Property=="Event Title").Value;
 
-document.getElementById("eventSubtitle").innerText=
+document.getElementById("eventSubtitle")
+.innerText=
 titles.find(t=>t.Property=="Event Subtitle").Value;
 
 }
@@ -60,19 +47,16 @@ let form=document.getElementById("form");
 
 form.innerHTML="";
 
-let label=document.createElement("label");
-
-label.innerText="Name";
-
-form.appendChild(label);
-
 let input=document.createElement("input");
 
 input.id="Name";
 
 form.appendChild(input);
 
-lookup(input,PARTICIPANTS,"Name",(p)=>{
+lookup(input,
+CONFIG.participants,
+"Name",
+(p)=>{
 
 participant=p;
 
@@ -84,150 +68,88 @@ showButtons();
 
 }
 
-function lookup(input,data,key,callback){
-
-let list=document.createElement("div");
-
-list.style.position="absolute";
-
-list.style.background="white";
-
-list.style.zIndex="1000";
-
-list.style.display="none";
-
-input.after(list);
-
-input.oninput=function(){
-
-list.innerHTML="";
-
-let text=this.value.trim();
-
-if(!text){
-
-list.style.display="none";
-
-return;
-
-}
-
-let results=data.filter(r=>
-r[key] &&
-r[key].toLowerCase()
-.startsWith(text.toLowerCase())
-);
-
-if(results.length==0){
-
-list.style.display="none";
-
-return;
-
-}
-
-list.style.display="block";
-
-results.slice(0,10).forEach(r=>{
-
-let item=document.createElement("div");
-
-item.innerText=r[key];
-
-item.style.padding="5px";
-
-item.style.cursor="pointer";
-
-item.onclick=function(){
-
-input.value=r[key];
-
-list.style.display="none";
-
-callback(r);
-
-};
-
-list.appendChild(item);
-
-});
-
-};
-
-}
-
 function buildDetails(){
 
 let form=document.getElementById("form");
 
 form.innerHTML="";
 
-field("Name",participant.Name,false);
+createField("Name",participant.Name,false);
 
-field("Mobile",participant.Mobile,false);
+createField("Mobile",participant.Mobile,false,true);
 
-field("Email",participant.Email,false);
+createField("Email",participant.Email,false,true);
 
-field("Centre",participant.Centre,false);
+createField("Centre",participant.Centre,false);
 
-field("District",participant.District,false);
+createField("District",participant.District,false);
 
-field("Zone",participant.Zone,false);
+createField("Zone",participant.Zone,false);
 
-field("SRCMID",participant.SRCMID,false);
+createField("SRCMID",participant.SRCMID,false);
 
-field("PINCODE",participant.PINCODE,false);
+createField("PINCODE",participant.PINCODE,false);
 
 }
 
-function field(name,value,editable){
+function createField(name,value,editable,verify){
 
 let form=document.getElementById("form");
 
-let l=document.createElement("label");
+let label=document.createElement("label");
 
-l.innerText=name;
+label.innerText=name;
 
-form.appendChild(l);
+form.appendChild(label);
 
-let i=document.createElement("input");
+let input=document.createElement("input");
 
-i.id=name;
+input.id=name;
 
-i.value=value||"";
+input.value=value;
 
-i.disabled=!editable;
+input.disabled=!editable;
 
-form.appendChild(i);
+form.appendChild(input);
 
-/* DYNAMIC HELP */
+/* help */
 
+let rule=RULES.find(r=>
+r.Field_Name.trim()==name);
 
-
-  let rule=RULES.find(r=>
-r.Field_Name &&
-r.Field_Name.toString().trim().toUpperCase()
-==
-name.toString().trim().toUpperCase()
-);
-
-if(rule && rule.Help_Text){
+if(rule){
 
 let help=document.createElement("div");
-
-help.id="help_"+name;
 
 help.innerText=rule.Help_Text;
 
 help.style.fontSize="12px";
 
-help.style.color="#777";
-
-help.style.fontStyle="italic";
+help.style.color="gray";
 
 help.style.display="none";
 
+help.id="help_"+name;
+
 form.appendChild(help);
+
+}
+
+/* verification */
+
+if(verify){
+
+let btn=document.createElement("button");
+
+btn.innerText="Send Verification";
+
+btn.style.display="none";
+
+btn.id="verify_"+name;
+
+btn.onclick=()=>sendCode();
+
+form.appendChild(btn);
 
 }
 
@@ -235,44 +157,30 @@ form.appendChild(help);
 
 function showButtons(){
 
-let r=document.getElementById("registerBtn");
+document.getElementById("buttons")
+.style.display="block";
 
-let e=document.getElementById("editBtn");
+document.getElementById("registerBtn")
+.onclick=register;
 
-let u=document.getElementById("updateBtn");
-
-document.getElementById("buttons").style.display="block";
-
-r.disabled=false;
-
-r.style.pointerEvents="auto";
-
-e.style.display="inline";
-
-u.style.display="none";
-
-r.onclick=registerParticipant;
-
-e.onclick=editMode;
+document.getElementById("editBtn")
+.onclick=edit;
 
 }
 
-function editMode(){
+function edit(){
 
-let r=document.getElementById("registerBtn");
+document.getElementById("registerBtn")
+.disabled=true;
 
-r.disabled=true;
+document.getElementById("editBtn")
+.style.display="none";
 
-r.style.pointerEvents="none";
+document.getElementById("updateBtn")
+.style.display="inline";
 
-r.style.opacity="0.5";
-
-document.getElementById("editBtn").style.display="none";
-
-document.getElementById("updateBtn").style.display="inline";
-
-document.getElementById("updateBtn").onclick=
-registerParticipant;
+document.getElementById("updateBtn")
+.disabled=true;
 
 enable("Mobile");
 
@@ -280,69 +188,91 @@ enable("Email");
 
 enable("PINCODE");
 
-enableCentre();
+RULES.forEach(r=>{
 
-/* SHOW HELP FOR ALL RULES */
+let h=document.getElementById(
+"help_"+r.Field_Name);
 
-RULES.forEach(rule=>{
-
-showHelp(rule.Field_Name);
-
-});
-
-}
-
-function showHelp(name){
-
-let h=document.getElementById("help_"+name);
-
-if(h){
-
-h.style.display="block";
-
-}
-
-}
-
-function enable(name){
-
-document.getElementById(name).disabled=false;
-
-}
-
-function enableCentre(){
-
-let old=document.getElementById("Centre");
-
-let newCentre=old.cloneNode(true);
-
-old.parentNode.replaceChild(newCentre,old);
-
-newCentre.disabled=false;
-
-let updateBtn=document.getElementById("updateBtn");
-
-updateBtn.disabled=true;
-
-lookup(newCentre,CENTRES,"Centre",(c)=>{
-
-document.getElementById("District").value=c.District;
-
-document.getElementById("Zone").value=c.Zone;
-
-updateBtn.disabled=false;
+if(h) h.style.display="block";
 
 });
 
-newCentre.addEventListener("input",function(){
+document.getElementById("verify_Mobile")
+.style.display="inline";
 
-updateBtn.disabled=true;
-
-});
+document.getElementById("verify_Email")
+.style.display="inline";
 
 }
 
-async function registerParticipant(){
+function enable(id){
+
+document.getElementById(id)
+.disabled=false;
+
+document.getElementById("updateBtn")
+.disabled=true;
+
+verified=false;
+
+}
+
+async function sendCode(){
+
+let email=
+document.getElementById("Email").value;
+
+await fetch(
+API+
+"?action=verify&email="+email
+);
+
+alert(
+"Verification code sent to "+
+email
+);
+
+let input=
+document.createElement("input");
+
+input.placeholder=
+"Enter verification code";
+
+input.id="code";
+
+document.getElementById("form")
+.appendChild(input);
+
+let btn=
+document.createElement("button");
+
+btn.innerText="Verify";
+
+btn.onclick=verifyCode;
+
+document.getElementById("form")
+.appendChild(btn);
+
+}
+
+function verifyCode(){
+
+verified=true;
+
+document.getElementById("updateBtn")
+.disabled=false;
+
+alert("Verified");
+
+}
+
+async function register(){
+
+await submit();
+
+}
+
+async function submit(){
 
 let res=await fetch(
 
@@ -362,17 +292,26 @@ API+
 
 let data=await res.json();
 
-if(data.status=="success"){
-
-document.getElementById("message").innerText=
-data.message;
-
-document.getElementById("registerBtn").disabled=true;
-
-document.getElementById("updateBtn").disabled=true;
-
-document.getElementById("editBtn").disabled=true;
+showThankYou(data);
 
 }
+
+async function showThankYou(data){
+
+document.getElementById("main")
+.style.display="none";
+
+let doc=
+CONFIG.settings.ThankYou_Doc_URL
+.replace("/edit","/export?format=html");
+
+let html=
+await fetch(doc).then(r=>r.text());
+
+document.getElementById("thankyou")
+.innerHTML=html;
+
+document.getElementById("thankyou")
+.style.display="block";
 
 }
