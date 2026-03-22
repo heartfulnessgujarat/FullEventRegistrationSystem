@@ -4,9 +4,8 @@
 
 <head>
 
-<meta charset="UTF-8">
-
-<title>Event Registration</title>
+<meta name="viewport"
+content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="style.css">
 
@@ -14,31 +13,45 @@
 
 <body>
 
+<div id="main">
+
 <h2 id="eventTitle"></h2>
 
-<h4 id="eventSubtitle"></h4>
+<div id="eventSubtitle"></div>
 
 <div id="form"></div>
 
-<div id="buttons" style="display:none;margin-top:20px;">
+<div id="buttons" style="display:none">
 
 <button id="registerBtn">
+
 Details are correct – Register me
+
 </button>
 
 <button id="editBtn">
+
 I want to edit my details
+
 </button>
 
-<button id="updateBtn" style="display:none">
+<button id="updateBtn"
+style="display:none">
+
 Details updated – Register me
+
 </button>
 
 </div>
 
-<div id="message" style="margin-top:15px;color:green;"></div>
+<div id="message"></div>
 
-<script src="app.js?v=21"></script>
+</div>
+
+<div id="thankyou"
+style="display:none"></div>
+
+<script src="app.js?v=23"></script>
 
 </body>
 
