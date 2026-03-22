@@ -202,7 +202,14 @@ form.appendChild(i);
 
 /* DYNAMIC HELP */
 
-let rule=RULES.find(r=>r.Field_Name==name);
+
+
+  let rule=RULES.find(r=>
+r.Field_Name &&
+r.Field_Name.toString().trim().toUpperCase()
+==
+name.toString().trim().toUpperCase()
+);
 
 if(rule && rule.Help_Text){
 
